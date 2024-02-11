@@ -122,10 +122,15 @@ void draw_circle(struct Image *img,
 //   tile    - pointer to Rect (the tile)
 //
 void draw_tile(struct Image *img,
-               int32_t x, int32_t y,
+               int32_t X, int32_t Y,
                struct Image *tilemap,
                const struct Rect *tile) {
- // TODO: implement
+  // this needs error handling
+  for (int y = 0; y < tile->height; y++) {
+    for (int x = 0; x < tile->width; x++) {
+      draw_pixel(img, X + x, Y + y, tilemap->data[(tile->y + y) * img->width + (tile->x + x)]);
+    }
+  }
 }
 
 //
