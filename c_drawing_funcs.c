@@ -25,7 +25,10 @@
 //   color - uint32_t color value
 //
 void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
-  // TODO: implement
+  if (x >= 0 && x < img->width && y >= 0 && y < img->height) { // ensure x,y coordinate is within img bounds
+    int index = y * img->width + x;
+    img->data[index] = color;
+  }
 }
 
 //
@@ -41,7 +44,9 @@ void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
 void draw_rect(struct Image *img,
                const struct Rect *rect,
                uint32_t color) {
-  // TODO: implement
+  if (rect->x >= 0 && rect->x < img->width && rect->y >= 0 && rect->y < img->height && rect->x + rect->width < img->width && rect->y + rect->height < img->height) {
+    
+  }
 }
 
 //
