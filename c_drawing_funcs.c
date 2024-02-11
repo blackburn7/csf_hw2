@@ -45,7 +45,11 @@ void draw_rect(struct Image *img,
                const struct Rect *rect,
                uint32_t color) {
   if (rect->x >= 0 && rect->x < img->width && rect->y >= 0 && rect->y < img->height && rect->x + rect->width < img->width && rect->y + rect->height < img->height) {
-    
+    for (int y = rect->y; y < rect->y + rect->height; y++) {
+      for (int x = rect->x; x < rect->x + rect->width; x++) {
+        draw_pixel(img, x, y, color);
+      }
+    }
   }
 }
 
