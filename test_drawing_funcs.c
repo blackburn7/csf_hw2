@@ -83,6 +83,7 @@ void test_draw_circle(TestObjs *objs);
 void test_draw_circle_clip(TestObjs *objs);
 void test_draw_tile(TestObjs *objs);
 void test_draw_sprite(TestObjs *objs);
+void test_color_extraction(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -99,8 +100,30 @@ int main(int argc, char **argv) {
   TEST(test_draw_circle_clip);
   TEST(test_draw_tile);
   TEST(test_draw_sprite);
-
+  TEST(test_color_extraction);
   TEST_FINI();
+}
+
+void test_color_extraction(TestObjs *objs) {
+  // Test get_r function
+  ASSERT(get_r(0xFF000000) == 0xFF);
+  ASSERT(get_r(0x00FF00FF) == 0x00);
+  ASSERT(get_r(0x80ABCDEF) == 0x80);
+
+  // Test get_g function
+  ASSERT(get_g(0x00FF0000) == 0xFF);
+  ASSERT(get_g(0xFF0000FF) == 0x00);
+  ASSERT(get_g(0x12345678) == 0x34);
+
+  // Test get_b function
+  ASSERT(get_b(0x0000FF00) == 0xFF);
+  ASSERT(get_b(0xFFFF0000) == 0x00);
+  ASSERT(get_b(0x87654321) == 0x43);
+
+  // Test get_a function
+  ASSERT(get_a(0x000000FF) == 0xFF);
+  ASSERT(get_a(0x00000000) == 0x00);
+  ASSERT(get_a(0x0000007F) == 0x7F);
 }
 
 void test_draw_pixel(TestObjs *objs) {
