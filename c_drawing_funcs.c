@@ -142,7 +142,7 @@ void draw_rect(struct Image *img,
   for (int y = rect->y; y < rect->y + rect->height; y++) {
     for (int x = rect->x; x < rect->x + rect->width; x++) {
       if (in_bounds(img, x, y)) {
-        draw_pixel(img, x, y, color);
+        set_pixel(img, compute_index(img, x, y), color);
       }
     }
   }
