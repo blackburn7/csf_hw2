@@ -8,6 +8,9 @@ struct Rect {
   int32_t x, y, width, height;
 };
 
+
+int32_t in_bounds(struct Image *img, int32_t x, int32_t y);
+
 void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color);
 
 void draw_rect(struct Image *img,

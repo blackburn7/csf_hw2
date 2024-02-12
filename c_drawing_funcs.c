@@ -9,7 +9,23 @@
 // Helper functions
 ////////////////////////////////////////////////////////////////////////
 
-// TODO: implement helper functions
+  //
+  // Returns true if an x and y coordinate is in the bounds of an image.
+  //
+  // Parameters:
+  //   img   - pointer to struct Image
+  //   x     - x coordinate (pixel column)
+  //   y     - y coordinate (pixel row)
+  //
+int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
+
+  if (x >= 0 && x < img->width && y >= 0 && y < img->height) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // API functions
@@ -25,7 +41,7 @@
 //   color - uint32_t color value
 //
 void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
-  if (x >= 0 && x < img->width && y >= 0 && y < img->height) { // ensure x,y coordinate is within img bounds
+  if (in_bounds(img, x, y)) { // ensure x,y coordinate is within img bounds
     int index = y * img->width + x;
     img->data[index] = color;
   }
@@ -44,9 +60,10 @@ void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
 void draw_rect(struct Image *img,
                const struct Rect *rect,
                uint32_t color) {
-  if (rect->x >= 0 && rect->x < img->width && rect->y >= 0 && rect->y < img->height && rect->x + rect->width < img->width && rect->y + rect->height < img->height) {
-    for (int y = rect->y; y < rect->y + rect->height; y++) {
-      for (int x = rect->x; x < rect->x + rect->width; x++) {
+
+  for (int y = rect->y; y < rect->y + rect->height; y++) {
+    for (int x = rect->x; x < rect->x + rect->width; x++) {
+      if (in_bounds(img, x, y)) {
         draw_pixel(img, x, y, color);
       }
     }
