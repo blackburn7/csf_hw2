@@ -47,21 +47,30 @@ uint8_t get_r(uint32_t color) {
 
 uint8_t get_g(uint32_t color) {
   // use 0xFF as bit mask that extracts upper middle significant 8 bits of 
-  uint8_t red_component = (color >> 16) & 0xFF;
-  return red_component;
+  uint8_t green_component = (color >> 16) & 0xFF;
+  return green_component;
 }
 
 uint8_t get_b(uint32_t color) {
   // use 0xFF as bit mask that extracts lower middle significant 8 bits of 
-  uint8_t red_component = (color >> 8) & 0xFF;
-  return red_component;
+  uint8_t blue_component = (color >> 8) & 0xFF;
+  return blue_component;
 }
 
 uint8_t get_a(uint32_t color) {
   // use 0xFF as bit mask that extracts least significant 8 bits of 
-  uint8_t red_component = color & 0xFF;
-  return red_component;
+  uint8_t alpha_component = color & 0xFF;
+  return alpha_component;
 }
+
+uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
+  
+
+
+
+  
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////

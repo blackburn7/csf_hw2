@@ -23,6 +23,8 @@ uint8_t get_b(uint32_t color);
 
 uint8_t get_a(uint32_t color);
 
+uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha);
+
 
 void draw_pixel(struct Image *img,
                 int32_t x, int32_t y,
