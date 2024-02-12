@@ -87,6 +87,7 @@ void test_color_extraction(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
 void test_in_bounds(TestObjs *objs);
 void test_blend_components();
+void test_blend_colors();
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -107,6 +108,7 @@ int main(int argc, char **argv) {
   TEST(test_compute_index);
   TEST(test_in_bounds);
   TEST(test_blend_components);
+  TEST(test_blend_colors);
   TEST_FINI();
 }
 
@@ -182,6 +184,32 @@ void test_blend_components() {
 
   // 75% opacity of fg over bg
   ASSERT(blend_components(200, 100, 191) == 174);
+}
+
+void test_blend_colors() {
+  // Fully opaque fg
+  ASSERT(blend_colors(0xFF0000FF, 0x00FF00FF) == 0xFF0000FF);
+
+  // Fully transparent fg
+  ASSERT(blend_colors(0x00000000, 0x00FF00FF) == 0x00FF00FF);
+
+  // 50% opacity red over green 
+  ASSERT(blend_colors(0x7F0000FF, 0x00FF00FF) == 0x7F7F007F);
+
+  // 50% opacity blue over red 
+  ASSERT(blend_colors(0x7F0000FF, 0xFF0000FF) == 0x7F7F007F);
+
+  // 25% opacity green over blue 
+  ASSERT(blend_colors(0x3F00FF00, 0x0000FFFF) == 0x3FC03F3F);
+
+  // 75% opacity blue over green 
+  ASSERT(blend_colors(0xBF0000FF, 0x00FF00FF) == 0xBF4040BF);
+
+  // 100% opacity, green over green
+  ASSERT(blend_colors(0xFF00FF00, 0x00FF00FF) == 0xFF00FF00);
+
+  // 0% opacity, red over blue
+  ASSERT(blend_colors(0x0000FF00, 0xFF0000FF) == 0xFF0000FF);
 }
 
 void test_compute_index(TestObjs *objs) {
