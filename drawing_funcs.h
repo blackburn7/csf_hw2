@@ -25,6 +25,13 @@ uint8_t get_a(uint32_t color);
 
 uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha);
 
+uint32_t blend_colors(uint32_t fg, uint32_t bg);
+
+void set_pixel(struct Image *img, uint32_t index, uint32_t color);
+
+int64_t square(int64_t x);
+
+int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2);
 
 void draw_pixel(struct Image *img,
                 int32_t x, int32_t y,
