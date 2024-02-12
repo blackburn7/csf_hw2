@@ -84,6 +84,7 @@ void test_draw_circle_clip(TestObjs *objs);
 void test_draw_tile(TestObjs *objs);
 void test_draw_sprite(TestObjs *objs);
 void test_color_extraction(TestObjs *objs);
+void test_compute_index(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -101,6 +102,7 @@ int main(int argc, char **argv) {
   TEST(test_draw_tile);
   TEST(test_draw_sprite);
   TEST(test_color_extraction);
+  TEST(test_compute_index);
   TEST_FINI();
 }
 
@@ -124,6 +126,23 @@ void test_color_extraction(TestObjs *objs) {
   ASSERT(get_a(0x000000FF) == 0xFF);
   ASSERT(get_a(0x00000000) == 0x00);
   ASSERT(get_a(0x0000007F) == 0x7F);
+}
+
+void test_compute_index(TestObjs *objs) {
+  // mid range
+  ASSERT(compute_index(&objs->large, 10, 12) == 298);
+
+  // first
+  ASSERT(compute_index(&objs->large, 0, 0) == 0);
+
+  // bottom right
+  ASSERT(compute_index(&objs->large, LARGE_W - 1, LARGE_H - 1) == 479);
+
+  // new row pixel
+  ASSERT(compute_index(&objs->large, 0, 1) == 24);
+
+  // last pixel of a row
+  ASSERT(compute_index(&objs->large, LARGE_W - 1, 0) == 23);
 }
 
 void test_draw_pixel(TestObjs *objs) {
