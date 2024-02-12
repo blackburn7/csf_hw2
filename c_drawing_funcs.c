@@ -64,11 +64,10 @@ uint8_t get_a(uint32_t color) {
 }
 
 uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
-  
+  uint32_t blended_color = 0;
+  uint8_t blended_red;
 
 
-
-  
 }
 
 
