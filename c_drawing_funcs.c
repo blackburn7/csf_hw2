@@ -88,7 +88,7 @@ uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
 //
 void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
   if (in_bounds(img, x, y)) { // ensure x,y coordinate is within img bounds
-    img->data[index] = color;
+    img->data[y * img->width + x] = color;
   }
 }
 
