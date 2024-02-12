@@ -86,6 +86,7 @@ void test_draw_sprite(TestObjs *objs);
 void test_color_extraction(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
 void test_in_bounds(TestObjs *objs);
+void test_blend_components();
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -105,6 +106,7 @@ int main(int argc, char **argv) {
   TEST(test_color_extraction);
   TEST(test_compute_index);
   TEST(test_in_bounds);
+  TEST(test_blend_components);
   TEST_FINI();
 }
 
@@ -163,6 +165,23 @@ void test_color_extraction(TestObjs *objs) {
   ASSERT(get_a(0x000000FF) == 0xFF);
   ASSERT(get_a(0x00000000) == 0x00);
   ASSERT(get_a(0x0000007F) == 0x7F);
+}
+
+void test_blend_components() {
+  // Full opacity
+  ASSERT(blend_components(100, 50, 255) == 100);
+
+  // No opacity
+  ASSERT(blend_components(100, 50, 0) == 50);
+
+  // 50% opacity
+  ASSERT(blend_components(100, 0, 127) == 49);
+
+  // 25% opacity of fg over bg
+  ASSERT(blend_components(100, 200, 64) == 174);
+
+  // 75% opacity of fg over bg
+  ASSERT(blend_components(200, 100, 191) == 174);
 }
 
 void test_compute_index(TestObjs *objs) {
