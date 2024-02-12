@@ -18,7 +18,6 @@
 //   y     - y coordinate (pixel row)
 //
 int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
-
   if (x >= 0 && x < img->width && y >= 0 && y < img->height) {
     return 1;
   } else {
@@ -64,13 +63,26 @@ uint8_t get_a(uint32_t color) {
 }
 
 uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
-  uint32_t blended_color = 0;
-  uint8_t blended_red;
-
+  return ((alpha * fg) + ((255 - alpha) * bg)) / 255;
 }
 
 uint32_t blend_colors(uint32_t fg, uint32_t bg) {
-  return 1;
+  uint32_t blended_color = 0;
+
+  uint32_t fg_alpha = get_a(fg);
+  uint8_t blended_red = blend_components(get_r(fg), get_r(bg), fg_alpha);
+  uint8_t blended_green = blend_components(get_g(fg), get_g(bg), fg_alpha);
+  uint8_t blended_blue = blend_components(get_b(fg), get_b(bg), fg_alpha);
+  blended_color |= blended_red;    // Red component in the most significant bits
+  blended_color <<= 8;
+  blended_color |= blended_green;  // Green component
+  blended_color <<= 8;
+  blended_color |= blended_blue;   // Blue component
+  blended_color <<= 8;
+  blended_color |= 0xFF; 
+
+
+  return blended_color;
 }
 
 void set_pixel(struct Image *img, uint32_t index, uint32_t color) {
@@ -88,7 +100,7 @@ int64_t square(int64_t x) {
 }
 
 int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
-  
+
 }
 
 
