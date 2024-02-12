@@ -9,14 +9,14 @@
 // Helper functions
 ////////////////////////////////////////////////////////////////////////
 
-  //
-  // Returns true if an x and y coordinate is in the bounds of an image.
-  //
-  // Parameters:
-  //   img   - pointer to struct Image
-  //   x     - x coordinate (pixel column)
-  //   y     - y coordinate (pixel row)
-  //
+//
+// Returns true if an x and y coordinate is in the bounds of an image.
+//
+// Parameters:
+//   img   - pointer to struct Image
+//   x     - x coordinate (pixel column)
+//   y     - y coordinate (pixel row)
+//
 int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
 
   if (x >= 0 && x < img->width && y >= 0 && y < img->height) {
@@ -24,6 +24,43 @@ int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
   } else {
     return 0;
   }
+}
+
+//
+// Calculates index based off given x and y coordinates.
+//
+// Parameters:
+//   img   - pointer to struct Image
+//   x     - x coordinate (pixel column)
+//   y     - y coordinate (pixel row)
+//
+uint32_t compute_index(struct Image *img, int32_t x, int32_t y) {
+  uint32_t index = x + (y * img->width);
+  return index;
+}
+
+uint8_t get_r(uint32_t color) {
+  // use 0xFF as bit mask that extracts most significant 8 bits of 
+  uint8_t red_component = (color >> 24) & 0xFF;
+  return red_component;
+}
+
+uint8_t get_g(uint32_t color) {
+  // use 0xFF as bit mask that extracts upper middle significant 8 bits of 
+  uint8_t red_component = (color >> 16) & 0xFF;
+  return red_component;
+}
+
+uint8_t get_b(uint32_t color) {
+  // use 0xFF as bit mask that extracts lower middle significant 8 bits of 
+  uint8_t red_component = (color >> 8) & 0xFF;
+  return red_component;
+}
+
+uint8_t get_a(uint32_t color) {
+  // use 0xFF as bit mask that extracts least significant 8 bits of 
+  uint8_t red_component = color & 0xFF;
+  return red_component;
 }
 
 
@@ -42,7 +79,6 @@ int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
 //
 void draw_pixel(struct Image *img, int32_t x, int32_t y, uint32_t color) {
   if (in_bounds(img, x, y)) { // ensure x,y coordinate is within img bounds
-    int index = y * img->width + x;
     img->data[index] = color;
   }
 }
