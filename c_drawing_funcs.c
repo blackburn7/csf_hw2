@@ -159,47 +159,19 @@ void draw_rect(struct Image *img,
 //   r       - radius of circle
 //   color   - uint32_t color value
 //
-void draw_circle(struct Image *img,
-                 int32_t x, int32_t y, int32_t r,
-                 uint32_t color) {
-  int dx = r;
-  int dy = 0;
-  int p = 1 - r;
-
-  // center point
-  draw_pixel(img, x + dx, y + dy, color);
-  if (r > 0) {
-    draw_pixel(img, x - dx, y, color);
-    draw_pixel(img, x, y + r, color);
-    draw_pixel(img, x, y - r, color);
-  }
-
-  while (dx > dy) {
-    dy++;
-
-    // bresenham's algorithm from wikipedia
-    if (p <= 0) {
-      p = p + 2*dy + 1;
-    } else {
-      dx--;
-      p = p + 2*dy - 2*dx + 1;
+void draw_circle(struct Image *img, int32_t x, int32_t y, int32_t r, uint32_t color) {
+  // Iterate over the square that bounds the circle
+  for (int i = y - r; i <= y + r; i++) {
+    for (int j = x - r; j <= x + r; j++) {
+      // Using the squared distance to avoid floating point operations
+      int dx = x - j;
+      int dy = y - i;
+      if (dx * dx + dy * dy <= r * r) {
+        // Point is inside the circle, draw the pixel
+        draw_pixel(img, j, i, color);
+      }
+      }
     }
-    if (dx < dy) {
-      break;
-    }
-    // octants
-    draw_pixel(img, x + dx, y - dy, color);
-    draw_pixel(img, x - dx, y - dy, color);
-    draw_pixel(img, x + dx, y + dy, color);
-    draw_pixel(img, x - dx, y + dy, color);
-
-    if (dx != dy) {
-      draw_pixel(img, x + dy, y - dx, color);
-      draw_pixel(img, x - dy, y - dx, color);
-      draw_pixel(img, x + dy, y + dx, color);
-      draw_pixel(img, x - dy, y + dx, color);
-    }
-  }
 }
 
 //
