@@ -85,6 +85,7 @@ void test_draw_tile(TestObjs *objs);
 void test_draw_sprite(TestObjs *objs);
 void test_color_extraction(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
+void test_in_bounds(TestObjs *objs);
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -103,7 +104,43 @@ int main(int argc, char **argv) {
   TEST(test_draw_sprite);
   TEST(test_color_extraction);
   TEST(test_compute_index);
+  TEST(test_in_bounds);
   TEST_FINI();
+}
+
+void test_in_bounds(TestObjs *objs) {
+    // coords inside
+    ASSERT(in_bounds(&objs->large, 10, 10) == 1);
+
+    // coords at the edge
+    ASSERT(in_bounds(&objs->large, LARGE_W - 1, LARGE_H - 1) == 1);
+
+    // coords outside bounds
+    ASSERT(in_bounds(&objs->large, LARGE_W, LARGE_H) == 0);
+
+    // x in, y below 0
+    ASSERT(in_bounds(&objs->large, 10, -1) == 0);
+
+    // x in, y above max
+    ASSERT(in_bounds(&objs->large, 10, LARGE_H) == 0);
+
+    // x exceeds, y in
+    ASSERT(in_bounds(&objs->large, LARGE_W, 10) == 0);
+
+    // x negative, y in
+    ASSERT(in_bounds(&objs->large, -1, 10) == 0);
+
+    // x 0, y above top
+    ASSERT(in_bounds(&objs->large, 0, -1) == 0);
+
+    // x right edge, y below bottom
+    ASSERT(in_bounds(&objs->large, LARGE_W - 1, LARGE_H) == 0);
+
+    // x far right, y in
+    ASSERT(in_bounds(&objs->large, LARGE_W + 100, 10) == 0);
+
+    // x, y far outside
+    ASSERT(in_bounds(&objs->large, LARGE_W + 100, LARGE_H + 100) == 0);
 }
 
 void test_color_extraction(TestObjs *objs) {
