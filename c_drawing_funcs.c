@@ -100,7 +100,7 @@ int64_t square(int64_t x) {
 }
 
 int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
-
+  return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
 }
 
 
@@ -163,10 +163,7 @@ void draw_circle(struct Image *img, int32_t x, int32_t y, int32_t r, uint32_t co
   // Iterate over the square that bounds the circle
   for (int i = y - r; i <= y + r; i++) {
     for (int j = x - r; j <= x + r; j++) {
-      // Using the squared distance to avoid floating point operations
-      int dx = x - j;
-      int dy = y - i;
-      if (dx * dx + dy * dy <= r * r) {
+      if (square_dist(x, y, j, i) <= r * r) {
         // Point is inside the circle, draw the pixel
         draw_pixel(img, j, i, color);
       }
