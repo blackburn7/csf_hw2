@@ -223,7 +223,8 @@ void draw_tile(struct Image *img,
   // this needs error handling
   for (int y = 0; y < tile->height; y++) {
     for (int x = 0; x < tile->width; x++) {
-      draw_pixel(img, X + x, Y + y, tilemap->data[(tile->y + y) * img->width + (tile->x + x)]);
+      img->data[compute_index(img, X + x, Y + y)] = tilemap->data[(tile->y + y) * img->width + (tile->x + x)];
+      //draw_pixel(img, X + x, Y + y, tilemap->data[(tile->y + y) * img->width + (tile->x + x)]);
     }
   }
 }
