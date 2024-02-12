@@ -67,8 +67,25 @@ uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
   uint32_t blended_color = 0;
   uint8_t blended_red;
 
-
 }
+
+uint32_t blend_colors(uint32_t fg, uint32_t bg) {
+  return 1;
+}
+
+void set_pixel(struct Image *img, uint32_t index, uint32_t color) {
+  // get foreground and backgorund colors
+  uint32_t fg_color = color;
+  uint32_t bg_color = img->data[index];
+
+  // blend foreground color with background color at index
+  uint32_t new_pixel = blend_colors(fg_color, bg_color);
+  img->data[index] = new_pixel;
+}
+
+int64_t square(int64_t x);
+
+int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2);
 
 
 
