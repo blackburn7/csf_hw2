@@ -170,8 +170,8 @@ void draw_circle(struct Image *img, int32_t x, int32_t y, int32_t r, uint32_t co
         // Point is inside the circle, draw the pixel
         draw_pixel(img, j, i, color);
       }
-      }
     }
+  }
 }
 
 //
