@@ -80,7 +80,7 @@ void check_picture(struct Image *img, Picture *p) {
 
 // prototypes of test functions
 void test_draw_pixel(TestObjs *objs);
-#if 0
+#if 1
 void test_draw_rect(TestObjs *objs);
 void test_draw_circle(TestObjs *objs);
 void test_draw_circle_clip(TestObjs *objs);
@@ -93,7 +93,7 @@ void test_draw_pixel_secret_1c(TestObjs *objs);
 void test_draw_pixel_secret_1d(TestObjs *objs);
 void test_draw_pixel_stress1(TestObjs *objs);
 void test_draw_pixel_stress2(TestObjs *objs);
-#if 0
+#if 1
 void test_draw_pixel_secret_1(TestObjs *objs);
 void test_draw_pixel_secret_2(TestObjs *objs);
 void test_draw_rect_secret_1(TestObjs *objs);
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 
   // TODO: add TEST() directives for your helper functions
   TEST(test_draw_pixel);
-#if 0
+#if 1
   TEST(test_draw_rect);
   TEST(test_draw_circle);
   TEST(test_draw_circle_clip);
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
   TEST(test_draw_pixel_secret_1d);
   TEST(test_draw_pixel_stress1);
   TEST(test_draw_pixel_stress2);
-#if 0
+#if 1
   TEST(test_draw_pixel_secret_1);
   TEST(test_draw_pixel_secret_2);
   TEST(test_draw_rect_secret_1);
@@ -163,7 +163,7 @@ void test_draw_pixel(TestObjs *objs) {
   ASSERT(objs->small.data[SMALL_IDX(4, 2)] == 0x000040FF);
 }
 
-#if 0
+#if 1
 void test_draw_rect(TestObjs *objs) {
   struct Rect red_rect = { .x = 2, .y = 2, .width=3, .height=3 };
   struct Rect blue_rect = { .x = 3, .y = 3, .width=3, .height=3 };
@@ -851,7 +851,7 @@ void test_draw_pixel_stress2(TestObjs *objs) {
   check_picture(&objs->small, &pic);
 }
 
-#if 0
+#if 1
 void test_draw_pixel_secret_1(TestObjs *objs) {
   // test that pixels can be drawn (including correct color blending)
   // in all four corners

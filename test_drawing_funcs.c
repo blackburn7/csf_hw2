@@ -194,7 +194,7 @@ void test_blend_colors() {
   ASSERT(blend_colors(0x00000000, 0x00FF00FF) == 0x00FF00FF);
 
   // 50% opacity red over green 
-  ASSERT(blend_colors(0x7F0000FF, 0x00FF00FF) == 0x7F7F007F);
+  ASSERT(blend_colors(0xFF00007F, 0x00FF00FF) == 0xFFFF00FF);
 
   // 50% opacity blue over red 
   ASSERT(blend_colors(0x7F0000FF, 0xFF0000FF) == 0x7F7F007F);

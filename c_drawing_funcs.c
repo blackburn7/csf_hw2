@@ -190,9 +190,18 @@ void draw_tile(struct Image *img,
                struct Image *tilemap,
                const struct Rect *tile) {
 
+  // stop execution if out of bounds access to tilemap
   for (int y = 0; y < tile->height; y++) {
     for (int x = 0; x < tile->width; x++) {
-      if (in_bounds(img, X + x, Y + y) && in_bounds(tilemap, x, y)) {
+      if (!in_bounds(tilemap, x + tile->x, y + tile->y)) {
+        return;
+      }
+    }
+  }
+  // copy pixels from tile map to destination img 
+  for (int y = 0; y < tile->height; y++) {
+    for (int x = 0; x < tile->width; x++) {
+      if (in_bounds(img, X + x, Y + y)) {
         img->data[compute_index(img, X + x, Y + y)] = tilemap->data[compute_index(tilemap, x + tile->x, y + tile->y)];
       }
     }
@@ -218,15 +227,22 @@ void draw_sprite(struct Image *img,
                  int32_t x, int32_t y,
                  struct Image *spritemap,
                  const struct Rect *sprite) {
+
+  // stop execution if out of bounds access to spritemap
   for (int y_sprite = 0; y_sprite < sprite->height; y_sprite++) {
     for (int x_sprite = 0; x_sprite < sprite->width; x_sprite++) {
-      if (in_bounds(img, x + x_sprite, y + y_sprite) && in_bounds(spritemap, x_sprite, y_sprite)) {
+      if (!in_bounds(spritemap, x_sprite + sprite->x, y_sprite + sprite->y)) {
+        return;
+      }
+    }
+  }
+  // copy pixels from sprite map to destination img 
+  for (int y_sprite = 0; y_sprite < sprite->height; y_sprite++) {
+    for (int x_sprite = 0; x_sprite < sprite->width; x_sprite++) {
+      if (in_bounds(img, x + x_sprite, y + y_sprite)) {
         uint32_t sprite_color = spritemap->data[compute_index(spritemap, x_sprite + sprite->x, y_sprite + sprite->y)];
         set_pixel(img, compute_index(img, x + x_sprite, y + y_sprite), sprite_color);
       }
     }
   }
-
-
-
 }
