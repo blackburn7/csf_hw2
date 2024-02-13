@@ -88,6 +88,8 @@ void test_compute_index(TestObjs *objs);
 void test_in_bounds(TestObjs *objs);
 void test_blend_components();
 void test_blend_colors();
+void test_square_dist();
+void test_square();
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -109,6 +111,8 @@ int main(int argc, char **argv) {
   TEST(test_in_bounds);
   TEST(test_blend_components);
   TEST(test_blend_colors);
+  TEST(test_square_dist);
+  TEST(test_square);
   TEST_FINI();
 }
 
@@ -184,6 +188,20 @@ void test_blend_components() {
 
   // 75% opacity of fg over bg
   ASSERT(blend_components(200, 100, 191) == 174);
+}
+
+void test_square() {
+  ASSERT(square(5) == 25);
+
+  ASSERT(square(4) == 16);
+
+  ASSERT(square(0) == 0);
+}
+
+void test_square_dist() {
+  ASSERT(square_dist(3, 4, 0, 0) == 25); 
+
+  ASSERT(square_dist(1, 1, 4, 5) == 25);
 }
 
 void test_blend_colors() {

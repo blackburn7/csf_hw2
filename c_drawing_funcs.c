@@ -100,7 +100,7 @@ int64_t square(int64_t x) {
 }
 
 int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
-  return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+  return square(x1 - x2) + square(y1 - y2);
 }
 
 
