@@ -5,7 +5,6 @@
 #include "image.h"
 #include "drawing_funcs.h"
 #include "tctest.h"
-// TODO: add prototypes for your helper functions
 
 // an expected color identified by a (non-zero) character code
 typedef struct {
@@ -99,7 +98,6 @@ int main(int argc, char **argv) {
 
   TEST_INIT();
 
-  // TODO: add TEST() directives for your helper functions
   TEST(test_draw_pixel);
   TEST(test_draw_rect);
   TEST(test_draw_circle);
