@@ -17,6 +17,9 @@
 //   x     - x coordinate (pixel column)
 //   y     - y coordinate (pixel row)
 //
+// Returns:
+//   The a 1 or 0 to determine in bounds.
+//
 int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
   if (x >= 0 && x < img->width && y >= 0 && y < img->height) {
     return 1;
@@ -33,39 +36,100 @@ int32_t in_bounds(struct Image *img, int32_t x, int32_t y) {
 //   x     - x coordinate (pixel column)
 //   y     - y coordinate (pixel row)
 //
+// Returns:
+//   The 32-bit index.
+//
 uint32_t compute_index(struct Image *img, int32_t x, int32_t y) {
   uint32_t index = x + (y * img->width);
   return index;
 }
 
+//
+// Extracts the red component from a given 32-bit color value.
+//
+// Parameters:
+//   color - 32-bit color value
+//
+// Returns:
+//   The 8-bit red component of the color.
+//
 uint8_t get_r(uint32_t color) {
   // use 0xFF as bit mask that extracts most significant 8 bits of 
   uint8_t red_component = (color >> 24) & 0xFF;
   return red_component;
 }
 
+//
+// Extracts the green component from a given 32-bit color value.
+//
+// Parameters:
+//   color - 32-bit color value
+//
+// Returns:
+//   The 8-bit green component of the color.
+//
 uint8_t get_g(uint32_t color) {
   // use 0xFF as bit mask that extracts upper middle significant 8 bits of 
   uint8_t green_component = (color >> 16) & 0xFF;
   return green_component;
 }
 
+//
+// Extracts the blue component from a given 32-bit color value.
+//
+// Parameters:
+//   color - 32-bit color value
+//
+// Returns:
+//   The 8-bit blue component of the color.
+//
 uint8_t get_b(uint32_t color) {
   // use 0xFF as bit mask that extracts lower middle significant 8 bits of 
   uint8_t blue_component = (color >> 8) & 0xFF;
   return blue_component;
 }
 
+//
+// Extracts the alpha (transparency) component from a given 32-bit color value.
+//
+// Parameters:
+//   color - 32-bit color value
+//
+// Returns:
+//   The 8-bit alpha component of the color.
+//
 uint8_t get_a(uint32_t color) {
   // use 0xFF as bit mask that extracts least significant 8 bits of 
   uint8_t alpha_component = color & 0xFF;
   return alpha_component;
 }
 
+
+//
+// Blends two color components based on the given alpha value.
+//
+// Parameters:
+//   fg    - foreground color component
+//   bg    - background color component
+//   alpha - alpha value used for blending
+//
+// Returns:
+//   The blended color component.
+//
 uint8_t blend_components(uint32_t fg, uint32_t bg, uint32_t alpha) {
   return ((alpha * fg) + ((255 - alpha) * bg)) / 255;
 }
 
+//
+// Blends two 32-bit colors based on the alpha component of the foreground color.
+//
+// Parameters:
+//   fg - foreground color
+//   bg - background color
+//
+// Returns:
+//   The 32-bit blended color.
+//
 uint32_t blend_colors(uint32_t fg, uint32_t bg) {
   uint32_t blended_color = 0;
 
@@ -85,6 +149,14 @@ uint32_t blend_colors(uint32_t fg, uint32_t bg) {
   return blended_color;
 }
 
+//
+// Sets the color of a pixel in an image at the specified index by blending the new color with the existing color.
+//
+// Parameters:
+//   img   - pointer to struct Image
+//   index - index of the pixel within the image's data array
+//   color - new color to set at the pixel
+//
 void set_pixel(struct Image *img, uint32_t index, uint32_t color) {
   // get foreground and backgorund colors
   uint32_t fg_color = color;
@@ -95,10 +167,29 @@ void set_pixel(struct Image *img, uint32_t index, uint32_t color) {
   img->data[index] = new_pixel;
 }
 
+//
+// Calculates the square of an integer.
+//
+// Parameters:
+//   x - integer to square
+//
+// Returns:
+//   The square of x.
+//
 int64_t square(int64_t x) {
   return x * x;
 }
 
+//
+// Calculates the square of the distance between two points.
+//
+// Parameters:
+//   x1, y1 - coordinates of the first point
+//   x2, y2 - coordinates of the second point
+//
+// Returns:
+//   The square of the distance between the two points.
+//
 int64_t square_dist(int64_t x1, int64_t y1, int64_t x2, int64_t y2) {
   return square(x1 - x2) + square(y1 - y2);
 }
