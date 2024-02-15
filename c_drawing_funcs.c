@@ -1,3 +1,12 @@
+/*
+ * Drawing functions implementations for main and helpers
+ * CSF Assignment 2
+ * Atticus Colwell
+ * astude99@jhu.edu
+ * Matthew Blackburn
+ * mblackb8@jhu.edu
+ */
+
 // C implementations of drawing functions (and helper functions)
 
 #include <assert.h>

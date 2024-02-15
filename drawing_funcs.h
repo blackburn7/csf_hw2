@@ -1,3 +1,11 @@
+/*
+ * Drawing functions list for main and helpers
+ * CSF Assignment 2
+ * Atticus Colwell
+ * astude99@jhu.edu
+ * Matthew Blackburn
+ * mblackb8@jhu.edu
+ */
 #ifndef DRAWING_FUNCS_H
 #define DRAWING_FUNCS_H
 
