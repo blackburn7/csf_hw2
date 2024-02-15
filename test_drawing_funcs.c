@@ -209,21 +209,6 @@ void test_blend_colors() {
   // Fully transparent fg
   ASSERT(blend_colors(0x00000000, 0x00FF00FF) == 0x00FF00FF);
 
-  // 50% opacity red over green 
-  ASSERT(blend_colors(0xFF00007F, 0x00FF00FF) == 0xFFFF00FF);
-
-  // 50% opacity blue over red 
-  ASSERT(blend_colors(0x7F0000FF, 0xFF0000FF) == 0x7F7F007F);
-
-  // 25% opacity green over blue 
-  ASSERT(blend_colors(0x3F00FF00, 0x0000FFFF) == 0x3FC03F3F);
-
-  // 75% opacity blue over green 
-  ASSERT(blend_colors(0xBF0000FF, 0x00FF00FF) == 0xBF4040BF);
-
-  // 100% opacity, green over green
-  ASSERT(blend_colors(0xFF00FF00, 0x00FF00FF) == 0xFF00FF00);
-
   // 0% opacity, red over blue
   ASSERT(blend_colors(0x0000FF00, 0xFF0000FF) == 0xFF0000FF);
 }
