@@ -55,4 +55,6 @@ void draw_sprite(struct Image *img,
                  struct Image *spritemap,
                  const struct Rect *sprite);
 
+
+
 #endif // DRAWING_FUNCS_H
