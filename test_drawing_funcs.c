@@ -89,6 +89,7 @@ void test_blend_components();
 void test_blend_colors();
 void test_square_dist();
 void test_square();
+void test_set_pixel();
 
 int main(int argc, char **argv) {
   if (argc > 1) {
@@ -111,6 +112,7 @@ int main(int argc, char **argv) {
   TEST(test_blend_colors);
   TEST(test_square_dist);
   TEST(test_square);
+  TEST(test_set_pixel);
   TEST_FINI();
 }
 
@@ -206,11 +208,43 @@ void test_blend_colors() {
   // Fully opaque fg
   ASSERT(blend_colors(0xFF0000FF, 0x00FF00FF) == 0xFF0000FF);
 
-  // Fully transparent fg
   ASSERT(blend_colors(0x00000000, 0x00FF00FF) == 0x00FF00FF);
 
   // 0% opacity, red over blue
   ASSERT(blend_colors(0x0000FF00, 0xFF0000FF) == 0xFF0000FF);
+
+  // Test blending two fully opaque colors
+  ASSERT(blend_colors(0xFFFFFFFF, 0x000000FF) == 0xFFFFFFFF);
+
+  // Test blending with the foreground fully transparent
+  ASSERT(blend_colors(0x0000FF00, 0xFF0000FF) == 0xFF0000FF);
+}
+
+void test_set_pixel() {
+  struct Image img;
+  img.width = 2;
+  img.height = 2;
+  img.data = (uint32_t[4]){ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF }; // White bg
+
+  // fully opaque color
+  set_pixel(&img, 0, 0xFF0000FF); // Set top-left pixel to red
+  ASSERT(img.data[0] == 0xFF0000FF);
+
+  // fully transparent color
+  set_pixel(&img, 1, 0x00000000); 
+  ASSERT(img.data[1] == 0xFFFFFFFF);
+
+  // Set pixel with a non transparent color
+  set_pixel(&img, 2, 0x8000FF00); 
+  ASSERT((img.data[2] & 0x0000FF00) > 0); 
+
+  // Overwrite one with another
+  set_pixel(&img, 0, 0xFFFF00FF); 
+  ASSERT(img.data[0] == 0xFFFF00FF);
+
+  // edge of img case
+  set_pixel(&img, 3, 0xFF00FFFF); 
+  ASSERT(img.data[3] == 0xFF00FFFF);
 }
 
 void test_compute_index(TestObjs *objs) {
