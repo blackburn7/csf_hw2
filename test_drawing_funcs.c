@@ -216,7 +216,7 @@ void test_blend_colors() {
 void test_compute_index(TestObjs *objs) {
   // mid range
   ASSERT(compute_index(&objs->large, 10, 12) == 298);
-
+ 
   // first
   ASSERT(compute_index(&objs->large, 0, 0) == 0);
 
