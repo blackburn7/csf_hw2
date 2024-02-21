@@ -29,7 +29,7 @@ set_pixel:
     pushq %r14
     subq $16, %rsp
     movl %edx, %r12d                     /* Move fg color into r12d */    
-    movq IMAGE_DATA_OFFSET(%rdi), %r14   /* Get ptr to img data */    
+    movq (IMAGE_DATA_OFFSET(%rdi)), %r14   /* Get ptr to img data */    
     leaq (%r14, %rsi, 4), %r14                /* Shift ptr to img->data[index] */
                       
 
