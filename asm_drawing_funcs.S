@@ -23,28 +23,33 @@
 
 .globl set_pixel
 set_pixel:
-    pushq %rbp
-    movq %rsp, %rbp
-    pushq %rbx
-    subq $8, %rsp                          /* Align stack to 16 bytes for callq */
 
-    /* Check bounds */
-    movq %rdi, %rbx                        /* Copy img pointer to %rbx for later use */
-    call in_bounds
-    testq %rax, %rax                       /* Test in_bounds result */
-    jz .Lpixel_out_of_bounds
+    /* Extract fg and bg colors */    
+    pushq %r12
+    pushq %r14
+    subq $16, %rsp
+    movl %edx, %r12d                     /* Move fg color into r12d */    
+    movq IMAGE_DATA_OFFSET(%rdi), %r14   /* Get ptr to img data */    
+    leaq (%r14, %rsi, 4), %r14                /* Shift ptr to img->data[index] */
+                      
 
-    /* Compute index and set pixel */
-    movq %rbx, %rdi                        /* Restore img pointer for compute_index */
-    call compute_index
-    movq IMAGE_DATA_OFFSET(%rbx), %rbx     /* Load address of img->data */
-    movl %ecx, (%rbx, %rax, 4)             /* Set the pixel color */
+    /* Get blended color */
+    movl %r12d, %edi                      /* Set params to call blend color */
+    movl (%r14), %esi                     /* Dereference data[index] to find bg color */
+    call blend_colors
+    movl %eax, (%r14)
 
-.Lpixel_out_of_bounds:
-    addq $8, %rsp                          /* Revert stack alignment */
-    popq %rbx
-    popq %rbp
+    
+
+    movq $0, %rax
+    addq $16, %rsp
+    popq %r14
+    popq %r12
+
     ret
+
+
+
 
 .globl get_r
 get_r:
@@ -92,28 +97,26 @@ blend_components:
 
 .globl in_bounds
 in_bounds:
-    pushq %rbp
-    movq %rsp, %rbp
 
-    movl IMAGE_WIDTH_OFFSET(%rdi), %eax    /* Load img->width */
-    movl IMAGE_HEIGHT_OFFSET(%rdi), %edx   /* Load img->height */
-    cmpq %rsi, %rax                        /* Compare x with img->width */
-    jae .Lout_of_bounds                    /* Jump if x >= img->width */
-    cmpq %rdx, %rsi                        /* Compare y with img->height */
-    jae .Lout_of_bounds                    /* Jump if y >= img->height */
-    testq %rsi, %rsi                       /* Check if x < 0 */
-    js .Lout_of_bounds                     /* Jump if x < 0 */
-    testq %rdx, %rdx                       /* Check if y < 0 */
-    js .Lout_of_bounds                     /* Jump if y < 0 */
+    movl IMAGE_WIDTH_OFFSET(%edi), %r12d    /* Load img->width */
+    movl IMAGE_HEIGHT_OFFSET(%edi), %r13d   /* Load img->height */
+    cmpl %r12d, %esi                        /* Compare x with img->width */
+    jae .Lout_of_bounds                     /* Jump if x >= img->width */
+    cmpl %r13d, %edx                        /* Compare y with img->height */
+    jae .Lout_of_bounds                     /* Jump if y >= img->height */
+    movl $0, %r10d
+    cmp %r10d, %esi                         /* Check if x < 0 */
+    jb .Lout_of_bounds                      /* Jump if x < 0 */
+    cmp %r10d, %edx                         /* Check if y < 0 */
+    jb .Lout_of_bounds                      /* Jump if y < 0 */
 
-    movq $1, %rax                          /* In bounds, return 1 */
+    movl $1, %eax                           /* In bounds, return 1 */
     jmp .Lin_bounds_end
 
 .Lout_of_bounds:
-    xorq %rax, %rax                        /* Out of bounds, return 0 */
+    movl $0, %eax                           /* Out of bounds, return 0 */
 
 .Lin_bounds_end:
-    popq %rbp
     ret
 
 .globl compute_index
@@ -131,6 +134,12 @@ compute_index:
 
 .globl blend_colors
 blend_colors:
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+    pushq %rbx
+
     pushq %rbp
     movq %rsp, %rbp
     subq $32, %rsp                         /* Allocate space for local variables and align stack */
@@ -202,6 +211,13 @@ blend_colors:
 
     addq $32, %rsp                         /* Clean up the stack */
     popq %rbp
+
+    popq %rbx
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+
     ret
 
 
@@ -218,49 +234,11 @@ blend_colors:
  *   %edx     - y coordinate (pixel row)
  *   %ecx     - uint32_t color value
  */
+
+ 
 .globl draw_pixel
 draw_pixel:
-    /* Save callee-saved registers used in this function */
-    pushq %rbp                      
-    pushq %rbx                      
-    pushq %r12                      
-    pushq %r13                      
-    pushq %r14                      
-    movq %rsp, %rbp                 
 
-    /* Copy function parameters to callee-saved registers for manipulation */
-    movq %rdi, %r12                 /* %r12 = img pointer */
-    movq %rsi, %r13                 /* %r13 = x */
-    movq %rdx, %r14                 /* %r14 = y */
-    movq %rcx, %rbx                 /* %rbx = color */
-
-    /* Check if the pixel is within bounds */
-    movq %r12, %rdi                 /* First argument for in_bounds: img pointer */
-    movq %r13, %rsi                 /* Second argument for in_bounds: x */
-    movq %r14, %rdx                 /* Third argument for in_bounds: y */
-    call in_bounds                  
-    testq %rax, %rax                /* Test the return value from in_bounds */
-    jz .Ldraw_pixel_end             /* Jump to end if the pixel is out of bounds */
-
-    /* If in bounds, compute the index and call set_pixel */
-    movq %r12, %rdi                 /* First argument for compute_index: img pointer */
-    movq %r13, %rsi                 /* Second argument for compute_index: x */
-    movq %r14, %rdx                 /* Third argument for compute_index: y */
-    call compute_index              /* Call compute_index to get the index */
-    
-    movq %rax, %rsi                 /* Move the computed index into %rsi for set_pixel */
-    movq %r12, %rdi                 /* First argument for set_pixel: img pointer */
-    movq %rbx, %rdx                 /* Third argument for set_pixel: color */
-    call set_pixel                  /* Call set_pixel with the img pointer, index, and color */
-
-.Ldraw_pixel_end:
-    /* Restore callee-saved registers and clean up the stack */
-    movq %rbp, %rsp                 
-    popq %r14                       
-    popq %r13                       
-    popq %r12                       
-    popq %rbx                       
-    popq %rbp                       
     ret    
 
 /*
