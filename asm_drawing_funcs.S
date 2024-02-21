@@ -71,7 +71,7 @@ get_b:
 .globl get_a
 get_a:
     movq %rdi, %rax               /* Copy color into %rax */
-    andq $0xFF, %rax              /* Mask with 0xFF to get the alpha component */
+    andq $0xFF, %rax              /* mask with 0xFF to get the a component */
     ret                           /* Return the alpha component */
 
 .globl blend_components
@@ -130,91 +130,76 @@ compute_index:
 
 .globl blend_colors
 blend_colors:
-    pushq %r12
-    pushq %r13
-    pushq %r14
-    pushq %r15
-    pushq %rbx
+    pushq %r12                            /* save r12 */
+    pushq %r13                            /* save r13 */
+    pushq %r14                            /* save r14 */
+    pushq %r15                            /* save r15 */
+    pushq %rbx                            /* save rbx */
 
-    pushq %rbp
-    movq %rsp, %rbp
-    subq $32, %rsp                         /* Allocate space for local variables and align stack */
+    pushq %rbp                            /* save rbp */
+    movq %rsp, %rbp                       /* setup new stack frame */
+    subq $32, %rsp                        /* allocate local variables */
 
-    /* Extract fg, bg values */             
-    movq %rdi, %r12                       /* Get fg parameter */
-    movq %rsi, %r13                       /* Get bg parameter */
+    /* setup fg and bg colors */
+    movq %rdi, %r12                       /* fg color to r12 */
+    movq %rsi, %r13                       /* bg color to r13 */
     
+    /* extract alpha component */
+    call get_a                            /* get alpha from fg */
+    movq %rax, %r14                       /* store alpha in r14 */
 
-    /* Extract alpha component */
-    call get_a                            /* Get alpha component */
-    movq %rax, %r14                       /* Store alpha */
+    /* blend red component */
+    call get_r                            /* get red from fg */
+    movq %rax, %r15                       /* store fg red in r15 */
+    movq %r13, %rdi                       /* set bg as param for get_r */
+    call get_r                            /* get red from bg */
+    movq %rax, %rbx                       /* store bg red in rbx */
+    movq %r15, %rdi                       /* set fg red as param for blend_components */
+    movq %rbx, %rsi                       /* set bg red as second param */
+    movq %r14, %rdx                       /* alpha as third param */
+    call blend_components                 /* blend red components */
+    movb %al, 3(%rbp)                     /* store blended red at lowest byte */
 
+    /* blend green component */
+    movq %r12, %rdi                       /* set fg as param for get_g */
+    call get_g                            /* get green from fg */
+    movq %rax, %r15                       /* store fg green in r15 */
+    movq %r13, %rdi                       /* set bg as param for get_g */
+    call get_g                            /* get green from bg */
+    movq %rax, %rbx                       /* store bg green in rbx */
+    movq %r15, %rdi                       /* set fg green as param */
+    movq %rbx, %rsi                       /* set bg green as second param */
+    movq %r14, %rdx                       /* alpha as third param */
+    call blend_components                 /* blend green components */
+    movb %al, 2(%rbp)                     /* store blended green */
 
-    /* Extract and blend red component */
-    call get_r                             /* Get red component of fg */
-    movq %rax, %r15                        
+    /* blend blue component */
+    movq %r12, %rdi                       /* set fg as param for get_b */
+    call get_b                            /* get blue from fg */
+    movq %rax, %r15                       /* store fg blue in r15 */
+    movq %r13, %rdi                       /* set bg as param for get_b */
+    call get_b                            /* get blue from bg */
+    movq %rax, %rbx                       /* store bg blue in rbx */
+    movq %r15, %rdi                       /* set fg blue as param */
+    movq %rbx, %rsi                       /* set bg blue as second param */
+    movq %r14, %rdx                       /* alpha as third param */
+    call blend_components                 /* blend blue components */
+    movb %al, 1(%rbp)                     /* store blended blue */
 
-    
-    movq %r13, %rdi                        /* Move bg to param 1 */
-    call get_r                             /* Get red component of bg */
-    movq %rax, %rbx       
+    /* set full opacity */
+    movb $0xFF, (%rbp)                    /* set highest byte to 0xFF for full opacity */
 
-    movq %r15, %rdi                        /* Move red of fg to param 1 */
-    movq %rbx, %rsi                        /* Move red of bg to param 2 */
-    movq %r14, %rdx                        /* Move alpha of fg to param 3 */
-    call blend_components
-    movb %al, 3(%rbp)
+    movl (%rbp), %eax                     /* move blended color to eax */
 
+    addq $32, %rsp                        /* deallocate local variables */
+    popq %rbp                             /* restore rbp */
+    popq %rbx                             /* restore rbx */
+    popq %r15                             /* restore r15 */
+    popq %r14                             /* restore r14 */
+    popq %r13                             /* restore r13 */
+    popq %r12                             /* restore r12 */
 
-
-
-    /* Extract and blend green component */
-    movq %r12, %rdi
-    call get_g                             /* Get green component of fg */
-    movq %rax, %r15 
-
-
-    movq %r13, %rdi
-    call get_g                             /* Get green component of bg */
-    movq %rax, %rbx
-
-    movq %r15, %rdi
-    movq %rbx, %rsi
-    movq %r14, %rdx
-    call blend_components
-    movb %al, 2(%rbp)
-
-
-    /* Extract and blend red component */
-    movq %r12, %rdi
-    call get_b
-    movq %rax, %r15
-
-    movq %r13, %rdi
-    call get_b
-    movq %rax, %rbx
-
-    movq %r15, %rdi
-    movq %rbx, %rsi
-    movq %r14, %rdx
-    call blend_components
-    movb %al, 1(%rbp)
-
-    /* set to full opacity */
-    movb $0xFF, (%rbp)
-
-    movl (%rbp), %eax
-
-    addq $32, %rsp                         /* Clean up the stack */
-    popq %rbp
-
-    popq %rbx
-    popq %r15
-    popq %r14
-    popq %r13
-    popq %r12
-
-    ret
+    ret                                   /* return */
 
 
 /***********************************************************************
