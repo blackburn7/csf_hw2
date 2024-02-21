@@ -77,14 +77,17 @@ get_a:
 blend_components:
     movq %rdi, %rax               /* Copy foreground component into %rax */
     imulq %rdx, %rax              /* Multiply fg component by alpha */
-    movq %rsi, %rbx               /* Copy background component into %rbx */
-    imulq $255, %rbx              /* Multiply bg component by 255 */
-    subq %rax, %rbx               /* Subtract fg*alpha from bg*255 */
-    addq $255, %rdx               /* Add 255 to alpha for rounding */
-    imulq %rdx, %rbx              /* Multiply bg*(255-alpha) by (alpha+255) */
-    addq $65025, %rbx             /* Add 255*255 for rounding */
-    shrq $16, %rbx                /* Divide by 65536 (2^16) */
-    movq %rbx, %rax               /* Move the result to %rax */
+
+    movq $255, %r10               /* Move 255 into %r10 */
+    subq %rdx, %r10               /* Subtract alpha from 255 */
+    imulq %rsi, %r10              /* Multiply bg with (255 - alpha) */
+    addq %r10, %rax               /* add (alpha * fg) with  (255 - alpha) * bg */
+
+    movq $0, %rdx                 /* set rdx to zero for division */
+    movq $255, %r11               /* set r11 to 255 */
+    idivq %r11                    /* divide rax by 255 */
+
+
     ret                           /* Return the blended component */
 
 .globl in_bounds
@@ -132,45 +135,70 @@ blend_colors:
     movq %rsp, %rbp
     subq $32, %rsp                         /* Allocate space for local variables and align stack */
 
-    /* Extract and blend red component */
-    movq %rdi, %rax
-    call get_a                             /* Get alpha component */
-    movq %rax, 16(%rsp)                    /* Store alpha */
+    /* Extract fg, bg values */             
+    movq %rdi, %r12                       /* Get fg parameter */
+    movq %rsi, %r13                       /* Get bg parameter */
+    
 
-    movq %rdi, %rax
+    /* Extract alpha component */
+    call get_a                            /* Get alpha component */
+    movq %rax, %r14                       /* Store alpha */
+
+
+    /* Extract and blend red component */
     call get_r                             /* Get red component of fg */
-    movq %rsi, %rdi
+    movq %rax, %r15                        
+
+    
+    movq %r13, %rdi                        /* Move bg to param 1 */
     call get_r                             /* Get red component of bg */
-    movq 16(%rsp), %rdx                    /* Load alpha */
-    call blend_components                  /* Blend red components */
-    movq %rax, %r8                         /* Store blended red */
+    movq %rax, %rbx       
+
+    movq %r15, %rdi                        /* Move red of fg to param 1 */
+    movq %rbx, %rsi                        /* Move red of bg to param 2 */
+    movq %r14, %rdx                        /* Move alpha of fg to param 3 */
+    call blend_components
+    movb %al, 3(%rbp)
+
+
+
 
     /* Extract and blend green component */
-    movq %rdi, %rax
+    movq %r12, %rdi
     call get_g                             /* Get green component of fg */
-    movq %rsi, %rdi
+    movq %rax, %r15 
+
+
+    movq %r13, %rdi
     call get_g                             /* Get green component of bg */
-    movq 16(%rsp), %rdx                    /* Load alpha */
-    call blend_components                  /* Blend green components */
-    movq %rax, %r9                         /* Store blended green */
+    movq %rax, %rbx
 
-    /* Extract and blend blue component */
-    movq %rdi, %rax
-    call get_b                             /* Get blue component of fg */
-    movq %rsi, %rdi
-    call get_b                             /* Get blue component of bg */
-    movq 16(%rsp), %rdx                    /* Load alpha */
-    call blend_components                  /* Blend blue components */
-    movq %rax, %r10                        /* Store blended blue */
+    movq %r15, %rdi
+    movq %rbx, %rsi
+    movq %r14, %rdx
+    call blend_components
+    movb %al, 2(%rbp)
 
-    /* Combine blended components into a single color */
-    shlq $24, %r8                          /* Shift blended red into position */
-    shlq $16, %r9                          /* Shift blended green into position */
-    shlq $8, %r10                          /* Shift blended blue into position */
-    orq %r9, %r8                           /* Combine red and green */
-    orq %r10, %r8                          /* Combine blue with red and green */
-    orq $0xFF, %r8                         /* Ensure alpha is set to 0xFF for the final color */
-    movq %r8, %rax                         /* Move the final color to %rax for return */
+
+    /* Extract and blend red component */
+    movq %r12, %rdi
+    call get_b
+    movq %rax, %r15
+
+    movq %r13, %rdi
+    call get_b
+    movq %rax, %rbx
+
+    movq %r15, %rdi
+    movq %rbx, %rsi
+    movq %r14, %rdx
+    call blend_components
+    movb %al, 1(%rbp)
+
+    /* set to full opacity */
+    movb $0xFF, (%rbp)
+
+    movl (%rbp), %eax
 
     addq $32, %rsp                         /* Clean up the stack */
     popq %rbp
