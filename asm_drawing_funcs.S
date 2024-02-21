@@ -24,29 +24,25 @@
 .globl set_pixel
 set_pixel:
 
-    /* Extract fg and bg colors */    
-    pushq %r12
-    pushq %r14
-    subq $16, %rsp
-    movl %edx, %r12d                     /* Move fg color into r12d */    
-    movq IMAGE_DATA_OFFSET(%rdi), %r14   /* Get ptr to img data */    
-    leaq (%r14, %rsi, 4), %r14                /* Shift ptr to img->data[index] */
-                      
+    pushq %r12                          /* save r12 */
+    pushq %r14                          /* save r14 */
+    subq $16, %rsp                      /* allocate stack space */
+    movl %edx, %r12d                    /* move fg color to r12d */
+    movq IMAGE_DATA_OFFSET(%rdi), %r14  /* load image data address */
+    leaq (%r14, %rsi, 4), %r14          /* calculate pixel address */
 
-    /* Get blended color */
-    movl %r12d, %edi                      /* Set params to call blend color */
-    movl (%r14), %esi                     /* Dereference data[index] to find bg color */
-    call blend_colors
-    movl %eax, (%r14)
+    /* blend color */
+    movl %r12d, %edi                    /* set fg color for blend_colors */
+    movl (%r14), %esi                   /* load bg color */
+    call blend_colors                   /* blend colors */
+    movl %eax, (%r14)                   /* store blended color */
 
-    
+    movq $0, %rax                       /* clear rax */
+    addq $16, %rsp                      /* deallocate stack space */
+    popq %r14                           /* restore r14 */
+    popq %r12                           /* restore r12 */
 
-    movq $0, %rax
-    addq $16, %rsp
-    popq %r14
-    popq %r12
-
-    ret
+    ret                                 /* return */
 
 
 
