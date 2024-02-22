@@ -1,5 +1,10 @@
 /*
  * Assembly-language implementations of the drawing functions
+ * CSF Assignment 2
+ * Atticus Colwell
+ * acolwel2@jhu.edu
+ * Matthew Blackburn
+ * mblackb8@jhu.edu
  */
 
 /* Offsets of struct Image fields */
@@ -21,60 +26,119 @@
    they can be called from the unit test code.
  ***********************************************************************/
 
-.globl set_pixel
+/*
+ * Set a specific pixel in the image to a given color.
+ *
+ * Parameters:
+ *   %rdi - pointer to struct Image
+ *   %rsi - index of the pixel within the image's data array
+ *   %edx - uint32_t color value
+ */
+    .globl set_pixel
 set_pixel:
 
-    pushq %r12                          /* save r12 */
-    pushq %r14                          /* save r14 */
-    subq $16, %rsp                      /* allocate stack space */
-    movl %edx, %r12d                    /* move fg color to r12d */
-    movq IMAGE_DATA_OFFSET(%rdi), %r14  /* load image data address */
-    leaq (%r14, %rsi, 4), %r14          /* calculate pixel address */
+  pushq %rbp                /* Save base pointer, set it to stack pointer */
+  movq %rsp, %rbp           /* Stack frame setup */
 
-    /* blend color */
-    movl %r12d, %edi                    /* set fg color for blend_colors */
-    movl (%r14), %esi                   /* load bg color */
-    call blend_colors                   /* blend colors */
-    movl %eax, (%r14)                   /* store blended color */
+  pushq %r12                /* Save used registers */
+  pushq %r13
+  pushq %r14
 
-    movq $0, %rax                       /* clear rax */
-    addq $16, %rsp                      /* deallocate stack space */
-    popq %r14                           /* restore r14 */
-    popq %r12                           /* restore r12 */
+  movq %rdi, %r12           /* %rdi contains img pointer, move to %r12 */
+  movq %rsi, %r13           /* %rsi contains index, move to %r13 */
+  movl %edx, %r14d          /* %edx contains color, move to %r14d */
 
-    ret                                 /* return */
+  /* Get background color from image data at index */
+  movq IMAGE_DATA_OFFSET(%r12), %r12   /* Adjust %r12 to point to img->data */
+  movl (%r12,%r13,4), %esi             /* Load bg color into %esi */
+  
+  movl %r14d, %edi                     /* Move new color into %edi for blend_colors */
+  call blend_colors                    /* Blend fg and bg colors */
+  movl %eax, (%r12,%r13,4)             /* Store blended color back into img->data[index] */
 
+  popq %r14                            /* Restore registers */
+  popq %r13
+  popq %r12
 
+  popq %rbp                            /* Restore base pointer */
+  ret                                  /* Return */
 
-
-.globl get_r
+/*
+ * Extract the red component from a 32-bit color value.
+ *
+ * Parameter:
+ *   %rdi - uint32_t color value
+ *
+ * Returns:
+ *   The 8-bit red component of the color value.
+ */
+    .globl get_r
 get_r:
     movq %rdi, %rax               /* Copy color into %rax */
     shrq $24, %rax                /* Shift right by 24 bits to isolate the red component */
     andq $0xFF, %rax              /* Mask with 0xFF to get the lower 8 bits */
     ret                           /* Return the red component */
 
-.globl get_g
+/*
+ * Extract the green component from a 32-bit color value.
+ *
+ * Parameter:
+ *   %rdi - uint32_t color value
+ *
+ * Returns:
+ *   The 8-bit green component of the color value, isolated and
+ *   right-shifted to the least significant byte position.
+ */
+    .globl get_g
 get_g:
     movq %rdi, %rax               /* Copy color into %rax */
     shrq $16, %rax                /* Shift right by 16 bits to isolate the green component */
     andq $0xFF, %rax              /* Mask with 0xFF */
     ret                           /* Return the green component */
 
-.globl get_b
+/*
+ * Extract the blue component from a 32-bit color value.
+ *
+ * Parameter:
+ *   %rdi - uint32_t color value
+ *
+ * Returns:
+ *   The 8-bit blue component of the color value.
+ */
+    .globl get_b
 get_b:
     movq %rdi, %rax               /* Copy color into %rax */
     shrq $8, %rax                 /* Shift right by 8 bits to isolate the blue component */
     andq $0xFF, %rax              /* Mask with 0xFF */
     ret                           /* Return the blue component */
 
-.globl get_a
+/*
+ * Extract the alpha (transparency) component from a 32-bit color value.
+ *
+ * Parameter:
+ *   %rdi - uint32_t color value
+ *
+ * Returns:
+ *   The 8-bit alpha component of the color value.
+ */
+    .globl get_a
 get_a:
     movq %rdi, %rax               /* Copy color into %rax */
     andq $0xFF, %rax              /* mask with 0xFF to get the a component */
     ret                           /* Return the alpha component */
 
-.globl blend_components
+/*
+ * Blend two color components based on an alpha value.
+ *
+ * Parameters:
+ *   %rdi - fg color component
+ *   %rsi - bg color component
+ *   %rdx - alpha value for the fg color component
+ *
+ * Returns:
+ *   The blended color component.
+ */
+    .globl blend_components
 blend_components:
     movq %rdi, %rax               /* Copy foreground component into %rax */
     imulq %rdx, %rax              /* Multiply fg component by alpha */
@@ -91,8 +155,22 @@ blend_components:
 
     ret                           /* Return the blended component */
 
-.globl in_bounds
+/*
+ * Check if a given (x, y) coordinate is within the bounds of the image.
+ *
+ * Parameters:
+ *   %rdi - pointer to struct Image
+ *   %esi - x coordinate (pixel column)
+ *   %edx - y coordinate (pixel row)
+ *
+ * Returns:
+ *   1 if the coordinate is within bounds, 0 otherwise.
+ */
+    .globl in_bounds
 in_bounds:
+
+    pushq %r12
+    pushq %r13 
 
     movl IMAGE_WIDTH_OFFSET(%edi), %r12d    /* Load img->width */
     movl IMAGE_HEIGHT_OFFSET(%edi), %r13d   /* Load img->height */
@@ -113,9 +191,22 @@ in_bounds:
     movl $0, %eax                           /* Out of bounds, return 0 */
 
 .Lin_bounds_end:
+    popq %r13
+    popq %r12
     ret
 
-.globl compute_index
+/*
+ * Compute the index in the image's data array for a given (x, y) coordinate.
+ *
+ * Parameters:
+ *   %rdi - pointer to struct Image
+ *   %rsi - x coordinate (pixel column)
+ *   %rdx - y coordinate (pixel row)
+ *
+ * Returns:
+ *   The index in the image's data array corresponding to the (x, y) coordinate.
+ */
+    .globl compute_index
 compute_index:
     pushq %rbp
     movq %rsp, %rbp
@@ -127,8 +218,17 @@ compute_index:
     popq %rbp
     ret
 
-
-.globl blend_colors
+/*
+ * Blend two 32-bit color values.
+ *
+ * Parameters:
+ *   %rdi - fg color value
+ *   %rsi - bg color value
+ *
+ * Returns:
+ *   The blended 32-bit color value.
+ */
+    .globl blend_colors
 blend_colors:
     pushq %r12                            /* save r12 */
     pushq %r13                            /* save r13 */
@@ -217,47 +317,46 @@ blend_colors:
  */
     .globl draw_pixel
 draw_pixel:
-    pushq %rbp                        /* save base pointer */
-    movq %rsp, %rbp                   /* set up stack frame */
 
-    pushq %rbx                        /* save rbx register */
-    pushq %r12                        /* save r12 register */
-    pushq %r13                        /* save r13 register */
-    pushq %r14                        /* save r14 register */
+  pushq %rbp                          /* Save base pointer, set it to stack pointer */
+  movq %rsp, %rbp                     /* Stack frame setup */
 
-    movq %rdi, %r12                   /* img pointer to r12 */
-    movl %esi, %r13d                  /* x to r13d */
-    movl %edx, %r14d                  /* y to r14d */
-    movl %ecx, %ebx                   /* color to ebx */
+  pushq %r12                          /* Save used registers */
+  pushq %r13
+  pushq %r14
 
-    /* call in_bounds function */
-    movq %r12, %rdi                   /* img pointer for in_bounds */
-    movl %r13d, %esi                  /* x for in_bounds */
-    movl %r14d, %edx                  /* y for in_bounds */
-    call in_bounds                    /* call in_bounds */
-    test %eax, %eax                   /* test in_bounds result */
-    jz .in_bounds_end                 /* jump if out of bounds */
+  movq %rdi, %r12                     /* %rdi contains img pointer, move to %r12 */
+  movl %edx, %r14d                    /* %edx contains y coordinate, move to %r14d */
+  movl %esi, %r13d                    /* %esi contains x coordinate, move to %r13d */
 
-    /* use compute_index function */
-    movq %r12, %rdi                   /* img pointer for compute_index */
-    movl %r13d, %esi                  /* x for compute_index */
-    movl %r14d, %edx                  /* y for compute_index */
-    call compute_index                /* call compute_index */
-    movq %rax, %rsi                   /* index to rsi for set_pixel */
+  /* Check bounds */
+  movq %r12, %rdi                     /* Prepare arguments for in_bounds */
+  movl %r14d, %edx                    /* y coordinate */
+  movl %r13d, %esi                    /* x coordinate */
+  call in_bounds                      /* Call in_bounds function */
+  testl %eax, %eax                    /* test if in_bounds returned true (non-zero) */
+  jz .Lstop_draw_pixel                /* If not in bounds then jump to end */
 
-    /* use set_pixel function */
-    movq %r12, %rdi                   /* img pointer for set_pixel */
-    movl %ebx, %edx                   /* color for set_pixel */
-    call set_pixel                    /* call set_pixel */
+  /* Compute index */
+  movl %r14d, %edx                    /* y coordinate */
+  movl %r13d, %esi                    /* x coordinate */
+  movq %r12, %rdi                     /* prep arguments for compute_index */
+  call compute_index                  /* Call compute_index function */
+  /* %rax now contains the computed index */
 
-.in_bounds_end:
-    popq %r14                         /* restore r14 */
-    popq %r13                         /* restore r13 */
-    popq %r12                         /* restore r12 */
-    popq %rbx                         /* restore rbx */
+  /* Set pixel color */
+  movq %r12, %rdi                     /* 1st arg for set_pixel which is img pointer */
+  movq %rax, %rsi                     /* 2nd arg for set_pixel which is index */
+  movl %ecx, %edx                     /* 3rd arg for set_pixel which is color */
+  call set_pixel                      /* Call set_pixel function */
 
-    popq %rbp                         /* restore base pointer */
-    ret                               /* return */
+.Lstop_draw_pixel:
+  popq %r14                           /* Restore registers */
+  popq %r13
+  popq %r12
+
+  popq %rbp                           /* Restore base pointer */
+  ret                                 /* Return */
 
 
 /*

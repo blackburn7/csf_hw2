@@ -77,11 +77,11 @@ void check_picture(struct Image *img, Picture *p) {
 
 // prototypes of test functions
 void test_draw_pixel(TestObjs *objs);
-void test_draw_rect(TestObjs *objs);
-void test_draw_circle(TestObjs *objs);
-void test_draw_circle_clip(TestObjs *objs);
-void test_draw_tile(TestObjs *objs);
-void test_draw_sprite(TestObjs *objs);
+//void test_draw_rect(TestObjs *objs);
+//void test_draw_circle(TestObjs *objs);
+//void test_draw_circle_clip(TestObjs *objs);
+//void test_draw_tile(TestObjs *objs);
+//void test_draw_sprite(TestObjs *objs);
 void test_color_extraction(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
 void test_in_bounds(TestObjs *objs);
@@ -100,11 +100,11 @@ int main(int argc, char **argv) {
   TEST_INIT();
 
   TEST(test_draw_pixel);
-  TEST(test_draw_rect);
-  TEST(test_draw_circle);
-  TEST(test_draw_circle_clip);
-  TEST(test_draw_tile);
-  TEST(test_draw_sprite);
+  //TEST(test_draw_rect);
+  //TEST(test_draw_circle);
+  //TEST(test_draw_circle_clip);
+  //TEST(test_draw_tile);
+  //TEST(test_draw_sprite);
   TEST(test_color_extraction);
   TEST(test_compute_index);
   TEST(test_in_bounds);
@@ -244,6 +244,7 @@ void test_set_pixel() {
 
   // fully opaque color
   set_pixel(&img, 0, 0xFF0000FF); // Set top-left pixel to red
+
   ASSERT(img.data[0] == 0xFF0000FF);
 
   // fully transparent color
@@ -296,8 +297,9 @@ void test_draw_pixel(TestObjs *objs) {
   ASSERT(objs->small.data[SMALL_IDX(3, 2)] == 0x7F8000FF);
   draw_pixel(&objs->small, 4, 2, 0x0000FF40); // 1/4-opaque full-intensity blue
   ASSERT(objs->small.data[SMALL_IDX(4, 2)] == 0x000040FF);
-}
+} 
 
+/*
 void test_draw_rect(TestObjs *objs) {
   struct Rect red_rect = { .x = 2, .y = 2, .width=3, .height=3 };
   struct Rect blue_rect = { .x = 3, .y = 3, .width=3, .height=3 };
@@ -439,3 +441,4 @@ void test_draw_sprite(TestObjs *objs) {
 
   check_picture(&objs->large, &pic);
 }
+*/

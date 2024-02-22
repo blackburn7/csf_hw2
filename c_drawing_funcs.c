@@ -2,7 +2,7 @@
  * Drawing functions implementations for main and helpers
  * CSF Assignment 2
  * Atticus Colwell
- * astude99@jhu.edu
+ * acolwel2@jhu.edu
  * Matthew Blackburn
  * mblackb8@jhu.edu
  */
