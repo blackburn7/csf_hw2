@@ -24,23 +24,12 @@
 .globl set_pixel
 set_pixel:
 
-<<<<<<< HEAD
-    /* Extract fg and bg colors */    
-    pushq %r12
-    pushq %r14
-    subq $16, %rsp
-    movl %edx, %r12d                     /* Move fg color into r12d */    
-    movq (IMAGE_DATA_OFFSET(%rdi)), %r14   /* Get ptr to img data */    
-    leaq (%r14, %rsi, 4), %r14                /* Shift ptr to img->data[index] */
-                      
-=======
     pushq %r12                          /* save r12 */
     pushq %r14                          /* save r14 */
     subq $16, %rsp                      /* allocate stack space */
     movl %edx, %r12d                    /* move fg color to r12d */
     movq IMAGE_DATA_OFFSET(%rdi), %r14  /* load image data address */
     leaq (%r14, %rsi, 4), %r14          /* calculate pixel address */
->>>>>>> b899649465ff0028dea2c9f30592987668942b84
 
     /* blend color */
     movl %r12d, %edi                    /* set fg color for blend_colors */
@@ -226,12 +215,50 @@ blend_colors:
  *   %edx     - y coordinate (pixel row)
  *   %ecx     - uint32_t color value
  */
-
- 
-.globl draw_pixel
+    .globl draw_pixel
 draw_pixel:
+    pushq %rbp                        /* save base pointer */
+    movq %rsp, %rbp                   /* set up stack frame */
 
-    ret    
+    pushq %rbx                        /* save rbx register */
+    pushq %r12                        /* save r12 register */
+    pushq %r13                        /* save r13 register */
+    pushq %r14                        /* save r14 register */
+
+    movq %rdi, %r12                   /* img pointer to r12 */
+    movl %esi, %r13d                  /* x to r13d */
+    movl %edx, %r14d                  /* y to r14d */
+    movl %ecx, %ebx                   /* color to ebx */
+
+    /* call in_bounds function */
+    movq %r12, %rdi                   /* img pointer for in_bounds */
+    movl %r13d, %esi                  /* x for in_bounds */
+    movl %r14d, %edx                  /* y for in_bounds */
+    call in_bounds                    /* call in_bounds */
+    test %eax, %eax                   /* test in_bounds result */
+    jz .in_bounds_end                 /* jump if out of bounds */
+
+    /* use compute_index function */
+    movq %r12, %rdi                   /* img pointer for compute_index */
+    movl %r13d, %esi                  /* x for compute_index */
+    movl %r14d, %edx                  /* y for compute_index */
+    call compute_index                /* call compute_index */
+    movq %rax, %rsi                   /* index to rsi for set_pixel */
+
+    /* use set_pixel function */
+    movq %r12, %rdi                   /* img pointer for set_pixel */
+    movl %ebx, %edx                   /* color for set_pixel */
+    call set_pixel                    /* call set_pixel */
+
+.in_bounds_end:
+    popq %r14                         /* restore r14 */
+    popq %r13                         /* restore r13 */
+    popq %r12                         /* restore r12 */
+    popq %rbx                         /* restore rbx */
+
+    popq %rbp                         /* restore base pointer */
+    ret                               /* return */
+
 
 /*
  * Draw a rectangle.
