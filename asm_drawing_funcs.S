@@ -20,27 +20,30 @@
    You should declare these as .globl so that
    they can be called from the unit test code.
  ***********************************************************************/
+/*
+
+140737488343744 - rdi
+
+140737488343752 - r14
+
+140737471578351 - img 
+
+140737471578359 - img.data
+
+
+
+ */ 
+
 
 .globl set_pixel
 set_pixel:
 
-<<<<<<< HEAD
-    /* Extract fg and bg colors */    
-    pushq %r12
-    pushq %r14
-    subq $16, %rsp
-    movl %edx, %r12d                     /* Move fg color into r12d */    
-    movq (IMAGE_DATA_OFFSET(%rdi)), %r14   /* Get ptr to img data */    
-    leaq (%r14, %rsi, 4), %r14                /* Shift ptr to img->data[index] */
-                      
-=======
     pushq %r12                          /* save r12 */
     pushq %r14                          /* save r14 */
-    subq $16, %rsp                      /* allocate stack space */
+    subq $8, %rsp                      /* allocate stack space */
     movl %edx, %r12d                    /* move fg color to r12d */
-    movq IMAGE_DATA_OFFSET(%rdi), %r14  /* load image data address */
+    leaq IMAGE_DATA_OFFSET(%rdi), %r14  /* load image data address */
     leaq (%r14, %rsi, 4), %r14          /* calculate pixel address */
->>>>>>> b899649465ff0028dea2c9f30592987668942b84
 
     /* blend color */
     movl %r12d, %edi                    /* set fg color for blend_colors */
@@ -49,7 +52,7 @@ set_pixel:
     movl %eax, (%r14)                   /* store blended color */
 
     movq $0, %rax                       /* clear rax */
-    addq $16, %rsp                      /* deallocate stack space */
+    addq $8, %rsp                      /* deallocate stack space */
     popq %r14                           /* restore r14 */
     popq %r12                           /* restore r12 */
 
