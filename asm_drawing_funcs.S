@@ -301,6 +301,37 @@ blend_colors:
 
     ret                                   /* return */
 
+    .globl square
+square:
+    movq %rdi, %rax        /* move x into rax */
+    imulq %rdi, %rax       /* multi rax by x, result in rax */
+    ret                    /* Return*/
+
+
+    .globl square_dist
+square_dist:
+    pushq %rbp             /* save */
+    movq %rsp, %rbp        /* set base */
+
+    /* Calculate x1 - x2 */
+    movq %rdi, %rax        /* bring x1 into rax */
+    subq %rdx, %rax        /* rax = x1 - x2 */
+    movq %rax, %rdi        /* arg for square */
+    call square            /* call square(x1 - x2) */
+    movq %rax, %rbx        /* store square(x1 - x2) in rbx */
+
+    /* Calculate y1 - y2 */
+    movq %rsi, %rax        /* bring y1 into rax */
+    subq %rcx, %rax        /* rax = y1 - y2 */
+    movq %rax, %rdi        /* arg for square */
+    call square            /* call square(y1 - y2) */
+    /* rax now contains square(y1 - y2) */
+
+    addq %rbx, %rax        /* add square(x1 - x2) to square(y1 - y2) */
+
+    popq %rbp              /* restore base */
+    ret                    /* Return */
+
 
 /***********************************************************************
    Public API functions
@@ -371,8 +402,78 @@ draw_pixel:
  */
 	.globl draw_rect
 draw_rect:
-	/* TODO: implement */
-	ret
+    pushq %rbp                          /* Save base pointer */
+    movq %rsp, %rbp                     /* Set up stack frame */
+
+    /* Save used registers */
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
+
+    /* Load function parameters into registers */
+    movq %rdi, %r12                     /* Image pointer */
+    movq %rsi, %r13                     /* Rectangle pointer */
+    movl %edx, %r15d                    /* Color */
+
+    /* Extract rectangle parameters */
+    movl 0(%r13), %r8d                  /* rect->x */
+    movl 4(%r13), %r9d                  /* rect->y */
+    movl 8(%r13), %r10d                 /* rect->width */
+    movl 12(%r13), %r11d                /* rect->height */
+
+    /* Calculate max x and y for the loop */
+    leal (%r8d, %r10d), %r10d           /* maxX = x + width */
+    leal (%r9d, %r11d), %r11d           /* maxY = y + height */
+
+    /* Y loop */
+    movl %r9d, %ebx                     /* y = rect->y */
+.y_loop:
+    cmp %ebx, %r11d                     /* if y >= maxY then end y loop */
+    jge .end_y_loop
+
+    /* X loop */
+    movl %r8d, %eax                     /* x = rect->x */
+.x_loop:
+    cmp %eax, %r10d                     /* if x >= maxX then end x loop */
+    jge .end_x_loop
+
+    /* Call in_bounds */
+    movq %r12, %rdi                     /* Image pointer */
+    movl %eax, %esi                     /* x coordinate */
+    movl %ebx, %edx                     /* y coordinate */
+    call in_bounds
+    testl %eax, %eax                    /* Check if in_bounds returned true */
+    jz .skip_pixel                      /* If not in bounds, skip setting this pixel */
+
+    /* Call compute_index */
+    movq %r12, %rdi                     /* Image pointer */
+    movl %eax, %esi                     /* x coordinate */
+    movl %ebx, %edx                     /* y coordinate */
+    call compute_index
+    /* %rax now contains the index */
+
+    /* Call set_pixel */
+    movq %r12, %rdi                     /* Image pointer */
+    movq %rax, %rsi                     /* Index */
+    movl %r15d, %edx                    /* Color */
+    call set_pixel
+
+.skip_pixel:
+    incl %eax                           /* x++ */
+    jmp .x_loop                         /* Loop through x */
+.end_x_loop:
+    incl %ebx                           /* y++ */
+    jmp .y_loop                         /* Loop through y */
+.end_y_loop:
+
+    /* Restore registers and stack frame */
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %rbp                           /* Restore base pointer */
+    ret                                 /* Return from function */
 
 /*
  * Draw a circle.
