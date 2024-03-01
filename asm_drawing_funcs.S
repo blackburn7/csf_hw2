@@ -402,80 +402,78 @@ draw_pixel:
  */
     .globl draw_rect          
 draw_rect:
-    /* save registers and set up stack frame */
-    pushq %r12            /* save r12 */
-    pushq %r13            /* save r13 */
-    pushq %r14            /* save r14 */
-    pushq %r15            /* save r15 */
-    pushq %rbx            /* save rbx */
-    pushq %rbp            /* save rbp */
+    /* Save registers and set up stack frame */
+    pushq %r12            /* save previous r12 */
+    pushq %r13            /* save previous r13 */
+    pushq %r14            /* save previous r14 */
+    pushq %rbx            /* save previous rbx */
+    pushq %rbp            /* save previous rbp */
     movq %rsp, %rbp       /* set base pointer */
-    subq $8, %rsp         /* allocate stack space */
+    subq $16, %rsp        /* allocate stack space for color and alignment */
 
-    /* store function arguments */
-    movq %rdi, %r12       /* image pointer to r12 */
-    movq %rsi, %r13       /* rect pointer to r13 */
-    movl %edx, %r14d      /* color to r14d */
+    /* Store function arguments with switched roles */
+    movq %rsi, %r12       /* store rect pointer in r12 */
+    movq %rdi, %r13       /* store image pointer in r13 */
+    movl %edx, -4(%rbp)   /* store color on stack */
 
-    /* initialize loop variables */
-    movl RECT_Y_OFFSET(%r13), %r15d /* load rect->y to r15d */
-    movl RECT_HEIGHT_OFFSET(%r13), %ebx /* load rect->height to ebx */
-    addl %r15d, %ebx      /* calculate y_end, store in ebx */
+    /* Initialize loop variables with switched registers */
+    movl RECT_Y_OFFSET(%r12), %r14d /* load rect->y into r14d */
+    movl RECT_HEIGHT_OFFSET(%r12), %ebx /* load rect->height into ebx */
+    addl %r14d, %ebx      /* calculate y_end, store in ebx */
 
-.LheightLoop:
-    cmp %ebx, %r15d       /* compare y with y_end */
-    jge .Lend_draw_rec    /* exit loop if y >= y_end */
-    movl RECT_X_OFFSET(%r13), %r10d /* load rect->x to r10d */
-    movl %r10d, -8(%rbp)  /* store current x */
-    movl RECT_WIDTH_OFFSET(%r13), %r11d /* load rect->width to r11d */
+.HeightLoop:
+    cmp %ebx, %r14d       /* compare y with y_end */
+    jge .EndDrawRectangle /* exit loop if y >= y_end */
+    movl RECT_X_OFFSET(%r12), %r10d /* load rect->x into r10d */
+    movl %r10d, -8(%rbp)  /* store current x on stack */
+    movl RECT_WIDTH_OFFSET(%r12), %r11d /* load rect->width into r11d */
     addl %r11d, %r10d     /* calculate x_end, store in r10d */
-    movl %r10d, -4(%rbp)  /* store x_end */
+    movl %r10d, -12(%rbp) /* store x_end on stack */
 
-    /* reset x for width loop */
-    movl RECT_X_OFFSET(%r13), %r11d /* reset current x to rect->x */
+    /* Reset x for width loop */
+    movl RECT_X_OFFSET(%r12), %r11d /* reset current x to rect->x */
 
-.LwidthLoop:
-    movl -8(%rbp), %r11d  /* load current x */
-    cmp -4(%rbp), %r11d   /* compare x with x_end */
-    jge .LendWidthLoop    /* exit loop if x >= x_end */
+.WidthLoop:
+    movl -8(%rbp), %r11d  /* load current x from stack */
+    cmp -12(%rbp), %r11d  /* compare x with x_end */
+    jge .WidthLoopEnd     /* exit loop if x >= x_end */
     
-    /* in bounds check */
-    movq %r12, %rdi       /* set image pointer for in_bounds */
+    /* In bounds check with switched registers */
+    movq %r13, %rdi       /* set image pointer from r13 for in_bounds */
     movl %r11d, %esi      /* set x for in_bounds */
-    movl %r15d, %edx      /* set y for in_bounds */
+    movl %r14d, %edx      /* set y for in_bounds */
     call in_bounds        /* call in_bounds function */
     testl %eax, %eax      /* test in_bounds result */
-    jz .LpixelSkip        /* skip if out of bounds */
+    jz .PixelSkip         /* skip if out of bounds */
 
-    /* compute index */
-    movq %r12, %rdi       /* set image pointer for compute_index */
+    /* Compute index with switched registers */
+    movq %r13, %rdi       /* set image pointer from r13 for compute_index */
     movl %r11d, %esi      /* set x for compute_index */
-    movl %r15d, %edx      /* set y for compute_index */
+    movl %r14d, %edx      /* set y for compute_index */
     call compute_index    /* call compute_index function */
 
-    /* set pixel */
-    movq %r12, %rdi       /* set image pointer for set_pixel */
+    /* Set pixel with color from stack */
+    movq %r13, %rdi       /* set image pointer from r13 for set_pixel */
     movq %rax, %rsi       /* set pixel index for set_pixel */
-    movl %r14d, %edx      /* set color for set_pixel */
+    movl -4(%rbp), %edx   /* set color from stack for set_pixel */
     call set_pixel        /* call set_pixel function */
 
-.LpixelSkip:
-    addl $1, -8(%rbp)     /* increment current x */
-    jmp .LwidthLoop       /* continue width loop */
+.PixelSkip:
+    addl $1, -8(%rbp)     /* increment current x on stack */
+    jmp .WidthLoop        /* continue width loop */
 
-.LendWidthLoop:
-    addl $1, %r15d        /* increment current y */
-    jmp .LheightLoop      /* continue height loop */
+.WidthLoopEnd:
+    addl $1, %r14d        /* increment current y */
+    jmp .HeightLoop       /* continue height loop */
 
-.Lend_draw_rec:
-    /* restore stack and registers */
-    addq $8, %rsp         /* deallocate stack space */
-    popq %rbp             /* restore base pointer */
-    popq %rbx             /* restore rbx */
-    popq %r15             /* restore r15 */
-    popq %r14             /* restore r14 */
-    popq %r13             /* restore r13 */
-    popq %r12             /* restore r12 */
+.EndDrawRectangle:
+    /* Restore stack and registers */
+    addq $16, %rsp        /* deallocate stack space */
+    popq %rbp             /* restore previous rbp */
+    popq %rbx             /* restore previous rbx */
+    popq %r14             /* restore previous r14 */
+    popq %r13             /* restore previous r13 */
+    popq %r12             /* restore previous r12 */
     ret                   /* return */
 
 
