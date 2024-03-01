@@ -492,94 +492,80 @@ draw_rect:
  *   %r8d     - uint32_t color value
  */
 	.globl draw_circle
+.globl draw_circle
 draw_circle:
-    /* Save registers and setup stack frame */
-    pushq %r12            /* save img pointer */
-    pushq %r13            /* save x center */
-    pushq %r14            /* save y center */
-    pushq %r15            /* save radius */
-    pushq %rbp            /* save base pointer */
-    movq %rsp, %rbp       /* create new base pointer */
-    subq $16, %rsp        /* allocate local storage for squared radius */
+    pushq %rbp                        /* save base pointer */
+    movq %rsp, %rbp                   /* set up stack frame */
+    pushq %r12                        /* save registers */
+    pushq %r13
+    pushq %r14
+    pushq %r15
+    pushq %rbx
 
-    /* Store function parameters */
-    movq %rdi, %r12       /* img pointer */
-    movl %esi, %r13d      /* x center */
-    movl %edx, %r14d      /* y center */
-    movl %ecx, %r15d      /* radius */
-    movl %r8d, %edi       /* color to edi for draw_pixel */
+    movq %rdi, %r12                   /* img pointer to r12 */
+    movl %esi, %r13d                  /* x center to r13d */
+    movl %edx, %r14d                  /* y center to r14d */
+    movl %ecx, %r15d                  /* radius to r15d */
+    movl %r8d, %ebx                   /* color to ebx */
 
-    /* Calculate squared radius once and store it */
-    movl %r15d, %eax      /* move radius to eax */
-    imull %eax, %eax      /* square radius */
-    movl %eax, -16(%rbp)  /* store squared radius */
-
-    /* Set up y loop from y-r to y+r */
-    movl %r14d, %eax      /* start y loop at y-r */
+    /* calculate starting y (i = y - r) */
+    movl %r14d, %eax
     subl %r15d, %eax
-    movl %eax, %r10d      /* r10d is loop y counter */
+    movl %eax, %r8d                   /* store start y in r8d */
 
-.LcircleHeightLoop:
-    /* Check height loop end condition */
-    movl %r14d, %eax      /* end y loop at y+r */
+.y_loop:                              /* start of y loop */
+    /* calculate ending y (i <= y + r) */
+    movl %r14d, %eax
     addl %r15d, %eax
-    cmp %eax, %r10d
-    jle .LcircleWidthLoopSetup /* continue if y counter <= y+r */
+    cmpl %r8d, %eax
+    jg .end_y_loop                    /* end y loop if i > y + r */
 
-    jmp .Lend_draw_cir    /* jump to end if done with all rows */
-
-.LcircleWidthLoopSetup:
-    /* Set up x loop from x-r to x+r */
-    movl %r13d, %eax      /* start x loop at x-r */
+    /* calculate starting x (j = x - r) */
+    movl %r13d, %eax
     subl %r15d, %eax
-    movl %eax, %r11d      /* r11d is loop x counter */
+    movl %eax, %r9d                   /* store start x in r9d */
 
-.LcircleWidthLoop:
-    /* Check width loop end condition */
-    movl %r13d, %eax      /* end x loop at x+r */
+.x_loop:                              /* start of x loop */
+    /* calculate ending x (j <= x + r) */
+    movl %r13d, %eax
     addl %r15d, %eax
-    cmp %eax, %r11d
-    jle .LcheckPixelInCircle /* continue if x counter <= x+r */
+    cmpl %r9d, %eax
+    jg .end_x_loop                    /* end x loop if j > x + r */
 
-    jmp .LendCircleWidthLoop /* jump to end of row */
+    /* call square_dist(x, y, j, i) */
+    movl %r13d, %edi                  /* x center */
+    movl %r14d, %esi                  /* y center */
+    movl %r9d, %edx                   /* current x (j) */
+    movl %r8d, %ecx                   /* current y (i) */
+    call square_dist
+    /* compare result with r^2 */
+    imull %r15d, %r15d                /* r * r */
+    cmpl %eax, %r15d
+    jg .pixel_outside                 /* skip if result > r^2 */
 
-.LcheckPixelInCircle:
-    /* Use square_dist to check if the point is within the circle */
-    movl %r13d, %edi      /* x center */
-    movl %r14d, %esi      /* y center */
-    movl %r11d, %edx      /* current x */
-    movl %r10d, %ecx      /* current y */
-    call square_dist      /* get squared distance from center */
-    movl -16(%rbp), %ebx  /* load squared radius */
-    cmp %ebx, %eax        /* compare squared distance with squared radius */
-    jg .LincrementX       /* if squared distance > squared radius, skip pixel */
+    /* pixel is inside circle, call draw_pixel(img, j, i, color) */
+    movq %r12, %rdi                   /* img pointer */
+    movl %r9d, %esi                   /* current x (j) */
+    movl %r8d, %edx                   /* current y (i) */
+    movl %ebx, %ecx                   /* color */
+    call draw_pixel
 
-    /* Draw the pixel since it's inside the circle */
-    movq %r12, %rdi       /* img pointer */
-    movl %r11d, %esi      /* current x */
-    movl %r10d, %edx      /* current y */
-    call draw_pixel       /* color already in edi from earlier */
+.pixel_outside:
+    incl %r9d                         /* increment x */
+    jmp .x_loop                       /* jump back to start of x loop */
 
-.LincrementX:
-    /* Increment x counter and loop */
-    incl %r11d            /* increment x counter */
-    jmp .LcircleWidthLoop /* jump back to start of width loop */
+.end_x_loop:
+    incl %r8d                         /* increment y */
+    jmp .y_loop                       /* jump back to start of y loop */
 
-.LendCircleWidthLoop:
-    /* Increment y counter and loop */
-    incl %r10d            /* increment y counter */
-    jmp .LcircleHeightLoop /* jump back to start of height loop */
-
-.Lend_draw_cir:
-    /* Restore stack and registers */
-    addq $16, %rsp        /* deallocate local storage */
-    popq %rbp             /* restore base pointer */
-    popq %r15             /* restore r15 */
-    popq %r14             /* restore r14 */
-    popq %r13             /* restore r13 */
-    popq %r12             /* restore r12 */
-    ret                   /* return to caller */
-
+.end_y_loop:
+    popq %rbx                         /* restore rbx */
+    popq %r15                         /* restore r15 */
+    popq %r14                         /* restore r14 */
+    popq %r13                         /* restore r13 */
+    popq %r12                         /* restore r12 */
+    popq %rbp                         /* restore base pointer */
+    ret                               /* return from function */
 /*
  * Draw a tile by copying all pixels in the region
  * enclosed by the tile parameter in the tilemap image
@@ -615,9 +601,79 @@ draw_tile:
  *   %r8  - pointer to Rect (the sprite)
  */
 	.globl draw_sprite
+.globl draw_sprite
 draw_sprite:
-	/* TODO: implement */
-	ret
+    pushq %rbp                          /* preserve base pointer */
+    movq %rsp, %rbp                     /* set up stack frame */
+    subq $64, %rsp                      /* allocate stack space for locals */
+
+    movq %rdi, -8(%rbp)                 /* store img pointer */
+    movl %esi, -12(%rbp)                /* store x coord */
+    movl %edx, -16(%rbp)                /* store y coord */
+    movq %rcx, -24(%rbp)                /* store spritemap pointer */
+    movq %r8, -32(%rbp)                 /* store sprite pointer */
+
+    movl $0, -36(%rbp)                  /* y_sprite counter init */
+    movl RECT_HEIGHT_OFFSET(%r8), %eax  /* load sprite height */
+    movl %eax, -40(%rbp)                /* store height in stack */
+
+.Lheight_loop:
+    movl -36(%rbp), %eax                /* load y_sprite counter */
+    movl -40(%rbp), %edx                /* load stored height */
+    cmp %edx, %eax                      /* compare counter with height */
+    jge .Lheight_loop_end              /* exit loop if counter >= height */
+
+    movl $0, -44(%rbp)                  /* x_sprite counter init */
+    movl RECT_WIDTH_OFFSET(%r8), %eax   /* load sprite width */
+    movl %eax, -48(%rbp)                /* store width in stack */
+
+.Lwidth_loop:
+    movl -44(%rbp), %eax                /* load x_sprite counter */
+    movl -48(%rbp), %edx                /* load stored width */
+    cmp %edx, %eax                      /* compare counter with width */
+    jge .Lwidth_loop_end               /* exit loop if counter >= width */
+
+    /* in bounds check for img */
+    movl -12(%rbp), %edi                /* load x coord */
+    addl %eax, %edi                     /* add x_sprite counter */
+    movl -16(%rbp), %esi                /* load y coord */
+    addl -36(%rbp), %esi                /* add y_sprite counter */
+    movq -8(%rbp), %rdi                 /* load img pointer */
+    call in_bounds                      /* check bounds */
+    testl %eax, %eax
+    je .Lskip_pixel                     /* skip if out of bounds */
+
+    /* compute source index and get color */
+    movl -44(%rbp), %edx                /* load x_sprite counter */
+    addl RECT_X_OFFSET(%r8), %edx       /* add sprite.x offset */
+    movl -36(%rbp), %ecx                /* load y_sprite counter */
+    addl RECT_Y_OFFSET(%r8), %ecx       /* add sprite.y offset */
+    movq -24(%rbp), %rdi                /* load spritemap pointer */
+    call compute_index                  /* compute source index */
+    movq -24(%rbp), %rdi                /* reload spritemap pointer */
+    movl (%rdi, %rax, 4), %ecx          /* get source pixel color */
+
+    /* set pixel in destination image using set_pixel */
+    movl -12(%rbp), %esi                /* load x coord */
+    addl -44(%rbp), %esi                /* add x_sprite counter */
+    movl -16(%rbp), %edx                /* load y coord */
+    addl -36(%rbp), %edx                /* add y_sprite counter */
+    movq -8(%rbp), %rdi                 /* load img pointer */
+    movl %ecx, %eax                     /* move sprite color to eax */
+    call set_pixel                      /* set pixel in img */
+
+.Lskip_pixel:
+    addl $1, -44(%rbp)                  /* increment x_sprite counter */
+    jmp .Lwidth_loop                    /* continue width loop */
+
+.Lwidth_loop_end:
+    addl $1, -36(%rbp)                  /* increment y_sprite counter */
+    jmp .Lheight_loop                   /* continue height loop */
+
+.Lheight_loop_end:
+    addq $64, %rsp                      /* deallocate stack space */
+    popq %rbp                           /* restore base pointer */
+    ret                                 /* return from function */
 
 /*
 vim:ft=gas:
