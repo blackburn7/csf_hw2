@@ -80,7 +80,7 @@ void test_draw_pixel(TestObjs *objs);
 void test_draw_rect(TestObjs *objs);
 void test_draw_circle(TestObjs *objs);
 void test_draw_circle_clip(TestObjs *objs);
-//void test_draw_tile(TestObjs *objs);
+void test_draw_tile(TestObjs *objs);
 void test_draw_sprite(TestObjs *objs);
 void test_color_extraction(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
   TEST(test_draw_rect);
   TEST(test_draw_circle);
   TEST(test_draw_circle_clip);
-  //TEST(test_draw_tile);
+  TEST(test_draw_tile);
   TEST(test_draw_sprite);
   TEST(test_color_extraction);
   TEST(test_compute_index);

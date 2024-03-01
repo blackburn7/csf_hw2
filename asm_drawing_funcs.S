@@ -582,8 +582,84 @@ draw_circle:
  */
 	.globl draw_tile
 draw_tile:
-	/* TODO: implement */
-	ret
+	draw_tile:
+    pushq %rbp                          /* save bp */
+    movq %rsp, %rbp                     /* setup frame */
+    subq $64, %rsp                      /* alloc space */
+
+    movq %rdi, -8(%rbp)                 /* store img ptr */
+    movl %esi, -12(%rbp)                /* store x coord */
+    movl %edx, -16(%rbp)                /* store y coord */
+    movq %rcx, -24(%rbp)                /* store tilemap ptr */
+    movq %r8, -32(%rbp)                 /* store tile ptr */
+
+    /* bounds check */
+    movl RECT_WIDTH_OFFSET(%r8), %eax   /* tile wd */
+    addl RECT_X_OFFSET(%r8), %eax       /* add tile x */
+    cmp IMAGE_WIDTH_OFFSET(%rcx), %eax  /* cmp with tilemap wd */
+    jg .Lout_of_bounds_tile                  /* if out, jmp */
+
+    movl RECT_HEIGHT_OFFSET(%r8), %eax  /* tile ht */
+    addl RECT_Y_OFFSET(%r8), %eax       /* add tile y */
+    cmp IMAGE_HEIGHT_OFFSET(%rcx), %eax /* cmp with tilemap ht */
+    jg .Lout_of_bounds_tile                  /* if out, jmp */
+
+    /* init loop ctrs */
+    movl $0, -36(%rbp)                  /* y ctr */
+.Lheight_loop:
+    movl -36(%rbp), %eax                /* load y ctr */
+    movl RECT_HEIGHT_OFFSET(%r8), %edx  /* tile ht */
+    cmp %edx, %eax                      /* cmp y < ht */
+    jge .Lheight_loop_end              /* if y >= ht, end */
+
+    movl $0, -40(%rbp)                  /* x ctr */
+.Lwidth_loop:
+    movl -40(%rbp), %eax                /* load x ctr */
+    movl RECT_WIDTH_OFFSET(%r8), %edx   /* tile wd */
+    cmp %edx, %eax                      /* cmp x < wd */
+    jge .Lwidth_loop_end               /* if x >= wd, end */
+
+    /* in bounds check */
+    movl -12(%rbp), %edi                /* x pos */
+    addl %eax, %edi                     /* x + x ctr */
+    movl -16(%rbp), %esi                /* y pos */
+    addl -36(%rbp), %esi                /* y + y ctr */
+    movq -8(%rbp), %rdi                 /* img ptr */
+    call in_bounds                      /* check bounds */
+    testl %eax, %eax
+    je .Lskip_pixel                     /* if out, skip */
+
+    /* compute src idx */
+    movl RECT_X_OFFSET(%r8), %esi       /* tile x */
+    addl -40(%rbp), %esi                /* tile x + x ctr */
+    movl RECT_Y_OFFSET(%r8), %edx       /* tile y */
+    addl -36(%rbp), %edx                /* tile y + y ctr */
+    movq -24(%rbp), %rdi                /* tilemap ptr */
+    call compute_index                  /* compute src idx */
+
+    /* get color and set pixel */
+    movq -24(%rbp), %rdi                /* tilemap ptr */
+    movl (%rdi, %rax, 4), %eax          /* get color */
+    movl -12(%rbp), %esi                /* x pos */
+    addl -40(%rbp), %esi                /* x + x ctr */
+    movl -16(%rbp), %edx                /* y pos */
+    addl -36(%rbp), %edx                /* y + y ctr */
+    movq -8(%rbp), %rdi                 /* img ptr */
+    call set_pixel                      /* set pixel */
+
+.Lskip_pixel:
+    addl $1, -40(%rbp)                  /* inc x ctr */
+    jmp .Lwidth_loop                    /* next x */
+
+.Lwidth_loop_end:
+    addl $1, -36(%rbp)                  /* inc y ctr */
+    jmp .Lheight_loop                   /* next y */
+
+.Lheight_loop_end:
+.Lout_of_bounds_tile:
+    addq $64, %rsp                      /* dealloc space */
+    popq %rbp                           /* restore bp */
+    ret                                 /* return */
 
 /*
  * Draw a sprite by copying all pixels in the region
@@ -603,77 +679,92 @@ draw_tile:
 	.globl draw_sprite
 .globl draw_sprite
 draw_sprite:
-    pushq %rbp                          /* preserve base pointer */
-    movq %rsp, %rbp                     /* set up stack frame */
-    subq $64, %rsp                      /* allocate stack space for locals */
+    pushq %rbp             /* Preserve base pointer */
+    movq %rsp, %rbp        /* Set base pointer */
 
-    movq %rdi, -8(%rbp)                 /* store img pointer */
-    movl %esi, -12(%rbp)                /* store x coord */
-    movl %edx, -16(%rbp)                /* store y coord */
-    movq %rcx, -24(%rbp)                /* store spritemap pointer */
-    movq %r8, -32(%rbp)                 /* store sprite pointer */
 
-    movl $0, -36(%rbp)                  /* y_sprite counter init */
-    movl RECT_HEIGHT_OFFSET(%r8), %eax  /* load sprite height */
-    movl %eax, -40(%rbp)                /* store height in stack */
+    movq %rdi, %r12      /* save image pointer */
+    movl %esi, %r13d     /* save x coord */
+    movl %edx, %r14d     /* save y coord */
+    movq %rcx, %r15      /* save spritemap pointer */
+    movq %r8, %rbx       /* save sprite pointer */
 
-.Lheight_loop:
-    movl -36(%rbp), %eax                /* load y_sprite counter */
-    movl -40(%rbp), %edx                /* load stored height */
-    cmp %edx, %eax                      /* compare counter with height */
-    jge .Lheight_loop_end              /* exit loop if counter >= height */
+    
+    movl RECT_WIDTH_OFFSET(%rbx), %eax  /* Load sprite->width into eax */
+    addl RECT_X_OFFSET(%rbx), %eax      /* Add sprite->x */
+    cmp IMAGE_WIDTH_OFFSET(%r15), %eax  /* Compare that to spritemap->width */
+    jg .Stile_out_of_bounds             /* If it's greater, out of bounds */
 
-    movl $0, -44(%rbp)                  /* x_sprite counter init */
-    movl RECT_WIDTH_OFFSET(%r8), %eax   /* load sprite width */
-    movl %eax, -48(%rbp)                /* store width in stack */
+    movl RECT_HEIGHT_OFFSET(%rbx), %eax /* Load sprite->height into eax */
+    addl RECT_Y_OFFSET(%rbx), %eax      /* Add sprite->y */
+    cmp IMAGE_HEIGHT_OFFSET(%r15), %eax /* Compare that to spritemap->height  */
+    jg .Stile_out_of_bounds             /* If it's greater, out of bounds */
 
-.Lwidth_loop:
-    movl -44(%rbp), %eax                /* load x_sprite counter */
-    movl -48(%rbp), %edx                /* load stored width */
-    cmp %edx, %eax                      /* compare counter with width */
-    jge .Lwidth_loop_end               /* exit loop if counter >= width */
+    
+    movl RECT_HEIGHT_OFFSET(%rbx), %ecx /* this is the height of the sprite */
+    movl $0, %r8d                    /* height loop counter (i) */
 
-    /* in bounds check for img */
-    movl -12(%rbp), %edi                /* load x coord */
-    addl %eax, %edi                     /* add x_sprite counter */
-    movl -16(%rbp), %esi                /* load y coord */
-    addl -36(%rbp), %esi                /* add y_sprite counter */
-    movq -8(%rbp), %rdi                 /* load img pointer */
-    call in_bounds                      /* check bounds */
-    testl %eax, %eax
-    je .Lskip_pixel                     /* skip if out of bounds */
+Sheight_loop:
+    cmp %ecx, %r8d                     /* compares i to sprite->height */
+    jge .Lheight_loop_end              /* if i >= sprite->height, exit loop */
 
-    /* compute source index and get color */
-    movl -44(%rbp), %edx                /* load x_sprite counter */
-    addl RECT_X_OFFSET(%r8), %edx       /* add sprite.x offset */
-    movl -36(%rbp), %ecx                /* load y_sprite counter */
-    addl RECT_Y_OFFSET(%r8), %ecx       /* add sprite.y offset */
-    movq -24(%rbp), %rdi                /* load spritemap pointer */
-    call compute_index                  /* compute source index */
-    movq -24(%rbp), %rdi                /* reload spritemap pointer */
-    movl (%rdi, %rax, 4), %ecx          /* get source pixel color */
+    movl RECT_WIDTH_OFFSET(%rbx), %edx  /* this is the width of the sprite */
+    movl $0, %r9d                      /* width loop counter (j) (inner loop) */
 
-    /* set pixel in destination image using set_pixel */
-    movl -12(%rbp), %esi                /* load x coord */
-    addl -44(%rbp), %esi                /* add x_sprite counter */
-    movl -16(%rbp), %edx                /* load y coord */
-    addl -36(%rbp), %edx                /* add y_sprite counter */
-    movq -8(%rbp), %rdi                 /* load img pointer */
-    movl %ecx, %eax                     /* move sprite color to eax */
-    call set_pixel                      /* set pixel in img */
+Swidth_loop:
+    cmp %edx , %r9d                      # Compare j < sprite->width
+    jge .Swidth_loop_end                # If j >= sprite->width, exit loop
 
-.Lskip_pixel:
-    addl $1, -44(%rbp)                  /* increment x_sprite counter */
-    jmp .Lwidth_loop                    /* continue width loop */
 
-.Lwidth_loop_end:
-    addl $1, -36(%rbp)                  /* increment y_sprite counter */
-    jmp .Lheight_loop                   /* continue height loop */
+    cmp %edx , %r9d                     /* compares j to sprite->width */
+    jge .Lwidth_loop_end                /* if j >= sprite->width, exit loop */
 
-.Lheight_loop_end:
-    addq $64, %rsp                      /* deallocate stack space */
-    popq %rbp                           /* restore base pointer */
-    ret                                 /* return from function */
+
+    movl %r13d, %esi                    /* Load x into %esi */
+    addl %r9d, %esi                     /* Add j to %esi (it is now x + j) */
+    movl %r14d, %edx                    /* Load y into %edx */
+    addl %r8d, %edx                     /* Add i to %esi (it is now y + i) */
+
+    movq %r12, %rdi                     /* moves img pointer to rdi */
+    call in_bounds                      /* calls in_bounds */
+    test %eax, %eax                     /* tests result of in_bounds */
+    je .Swidth_loop_end                 /* if result is false, then end loop here */
+
+    # Compute index_img
+    call compute_index                  /* calls computer_index, registers already in the right place */
+    movq %rax, %r10                     /* moves result (index_img) to r10 */
+
+    # Compute index_tilemap
+    movl RECT_X_OFFSET(%rbx), %esi      /* Load sprite->x into %esi */
+    addl %r9d, %esi                     /* Add j to %esi (it is now sprite->x  + j) */
+    movl RECT_Y_OFFSET(%rbx), %edx      /* Load sprite->y into %edx */
+    addl %r8d, %edx                     /* Add i to %esi (it is now sprite->y  + i) */
+    movq %r15, %rdi                     /* aligns spritemap pointer for computer_index */
+    call compute_index                  /* call compute_index */
+    movq %rax, %r11                     /* moves result (index_spritemap) to r11 */
+
+    movq IMAGE_DATA_OFFSET(%r15), %rax   /* moves address of the spritemap data to rax */
+    movl (%rax, %r11, 4), %edi  /* puts the data at index_spritemap into edi */
+
+    movq IMAGE_DATA_OFFSET(%r12), %r11 /* moves address of the image data to rax */
+    movl (%r11, %r10, 4), %esi /* puts the data at index_img into esi */
+
+    call blend_colors /* calls blend_colors with edi and esi */
+
+    movl %eax, (%r11, %r10, 4) /* moves result into image data at index_img */
+
+    inc %r9d                            /* increment j for the next iteration */
+    movl RECT_WIDTH_OFFSET(%rbx), %edx  /* makes sure that the upper bound on the loop is the same */
+    jmp Swidth_loop                     /* keep iterating inner loop */
+
+.Swidth_loop_end:
+    inc %r8d                            /* increment j for the next iteration */
+    jmp Sheight_loop                     /* keep iterating outer loop */
+
+.Sheight_loop_end:
+.Stile_out_of_bounds:
+    popq %rbp
+    ret
 
 /*
 vim:ft=gas:
