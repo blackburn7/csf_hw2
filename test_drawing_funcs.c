@@ -77,18 +77,18 @@ void check_picture(struct Image *img, Picture *p) {
 
 // prototypes of test functions
 void test_draw_pixel(TestObjs *objs);
-// void test_draw_rect(TestObjs *objs);
-// void test_draw_circle(TestObjs *objs);
-// void test_draw_circle_clip(TestObjs *objs);
-// void test_draw_tile(TestObjs *objs);
-// void test_draw_sprite(TestObjs *objs);
+void test_draw_rect(TestObjs *objs);
+void test_draw_circle(TestObjs *objs);
+void test_draw_circle_clip(TestObjs *objs);
+void test_draw_tile(TestObjs *objs);
+void test_draw_sprite(TestObjs *objs);
 void test_color_extraction(TestObjs *objs);
 void test_compute_index(TestObjs *objs);
 void test_in_bounds(TestObjs *objs);
 void test_blend_components();
 void test_blend_colors();
-//void test_square_dist();
-//void test_square();
+void test_square_dist();
+void test_square();
 void test_set_pixel();
 
 int main(int argc, char **argv) {
@@ -100,18 +100,18 @@ int main(int argc, char **argv) {
   TEST_INIT();
 
   TEST(test_draw_pixel);
-  //TEST(test_draw_rect);
-  //TEST(test_draw_circle);
-  //TEST(test_draw_circle_clip);
-  //TEST(test_draw_tile);
-  //TEST(test_draw_sprite);
+  TEST(test_draw_rect);
+  TEST(test_draw_circle);
+  TEST(test_draw_circle_clip);
+  TEST(test_draw_tile);
+  TEST(test_draw_sprite);
   TEST(test_color_extraction);
   TEST(test_compute_index);
   TEST(test_in_bounds);
   TEST(test_blend_components);
   TEST(test_blend_colors);
-  /*TEST(test_square_dist);
-  TEST(test_square); */
+  TEST(test_square_dist);
+  TEST(test_square); 
   TEST(test_set_pixel);
   TEST_FINI();
 }
@@ -189,7 +189,7 @@ void test_blend_components() {
   // 75% opacity of fg over bg
   ASSERT(blend_components(200, 100, 191) == 174);
 }
-/*
+
 void test_square() {
   ASSERT(square(5) == 25);
 
@@ -203,7 +203,7 @@ void test_square_dist() {
 
   ASSERT(square_dist(1, 1, 4, 5) == 25);
 }
- */
+ 
 void test_blend_colors() {
   // Fully opaque fg
   ASSERT(blend_colors(0xFF0000FF, 0x00FF00FF) == 0xFF0000FF);
@@ -299,7 +299,7 @@ void test_draw_pixel(TestObjs *objs) {
   ASSERT(objs->small.data[SMALL_IDX(4, 2)] == 0x000040FF);
 } 
 
-/*
+
 void test_draw_rect(TestObjs *objs) {
   struct Rect red_rect = { .x = 2, .y = 2, .width=3, .height=3 };
   struct Rect blue_rect = { .x = 3, .y = 3, .width=3, .height=3 };
@@ -441,4 +441,4 @@ void test_draw_sprite(TestObjs *objs) {
 
   check_picture(&objs->large, &pic);
 }
-*/
+
