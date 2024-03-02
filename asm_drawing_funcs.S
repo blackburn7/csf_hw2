@@ -486,7 +486,7 @@ draw_rect:
 draw_circle:
     pushq %rbp                        /* Save %rbp */
     movq %rsp, %rbp                   /* Set up %rbp */
-    subq $24, %rsp                    /* Allocate local vars */
+    subq $26, %rsp                    /* Allocate local vars */
     pushq %r12                        /* Save %r12 */
     pushq %r13                        /* Save %r13 */
     pushq %r14                        /* Save %r14 */
