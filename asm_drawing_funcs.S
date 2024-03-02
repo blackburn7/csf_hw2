@@ -486,7 +486,7 @@ draw_rect:
 draw_circle:
     pushq %rbp                        /* Save %rbp */
     movq %rsp, %rbp                   /* Set up %rbp */
-    subq $26, %rsp                    /* Allocate local vars */
+    subq $ 24, %rsp                    /* Allocate local vars */
     pushq %r12                        /* Save %r12 */
     pushq %r13                        /* Save %r13 */
     pushq %r14                        /* Save %r14 */
@@ -537,7 +537,7 @@ draw_circle:
 
 .pixel_outside:
     movl -16(%rbp), %eax              /* Load current x */
-    addl $1, %eax                         /* Increment x */
+    incl %eax                         /* Increment x */
     movl %eax, -16(%rbp)              /* Store new x */
     jmp .x_loop                       /* Next x */
 
@@ -551,7 +551,7 @@ draw_circle:
 
 .end_x_loop:
     movl -8(%rbp), %eax               /* Load current y */
-    addl $1, %eax                         /* Increment y */
+    incl %eax                         /* Increment y */
     movl %eax, -8(%rbp)               /* Store new y */
     jmp .y_loop                       /* Next y */
 
