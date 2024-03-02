@@ -537,7 +537,7 @@ draw_circle:
 
 .pixel_outside:
     movl -16(%rbp), %eax              /* Load current x */
-    incl %eax                         /* Increment x */
+    addl $1, %eax                         /* Increment x */
     movl %eax, -16(%rbp)              /* Store new x */
     jmp .x_loop                       /* Next x */
 
@@ -551,7 +551,7 @@ draw_circle:
 
 .end_x_loop:
     movl -8(%rbp), %eax               /* Load current y */
-    incl %eax                         /* Increment y */
+    addl $1, %eax                         /* Increment y */
     movl %eax, -8(%rbp)               /* Store new y */
     jmp .y_loop                       /* Next y */
 
