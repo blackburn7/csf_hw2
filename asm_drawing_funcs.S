@@ -310,8 +310,7 @@ square:
 
     .globl square_dist
 square_dist:
-    pushq %rbp             /* save */
-    movq %rsp, %rbp        /* set base */
+    pushq %rbx             /* save */
 
     /* Calculate x1 - x2 */
     movq %rdi, %rax        /* bring x1 into rax */
@@ -329,7 +328,7 @@ square_dist:
 
     addq %rbx, %rax        /* add square(x1 - x2) to square(y1 - y2) */
 
-    popq %rbp              /* restore base */
+    popq %rbx              /* restore base */
     ret                    /* Return */
 
 
