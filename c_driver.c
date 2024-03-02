@@ -129,6 +129,7 @@ int main(int argc, char **argv) {
       break;
 
     default:
+    
       fprintf(stderr, "Error: unrecognized command\n");
       error = 1;
     }

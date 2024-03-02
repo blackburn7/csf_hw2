@@ -172,8 +172,8 @@ in_bounds:
     pushq %r12
     pushq %r13 
 
-    movl IMAGE_WIDTH_OFFSET(%edi), %r12d    /* Load img->width */
-    movl IMAGE_HEIGHT_OFFSET(%edi), %r13d   /* Load img->height */
+    movl IMAGE_WIDTH_OFFSET(%rdi), %r12d    /* Load img->width */
+    movl IMAGE_HEIGHT_OFFSET(%rdi), %r13d   /* Load img->height */
     cmpl %r12d, %esi                        /* Compare x with img->width */
     jae .Lout_of_bounds                     /* Jump if x >= img->width */
     cmpl %r13d, %edx                        /* Compare y with img->height */
@@ -354,6 +354,7 @@ draw_pixel:
   pushq %r12                          /* Save used registers */
   pushq %r13
   pushq %r14
+  pushq %r15
 
   movq %rdi, %r12                     /* %rdi contains img pointer, move to %r12 */
   movl %edx, %r14d                    /* %edx contains y coordinate, move to %r14d */
@@ -381,6 +382,7 @@ draw_pixel:
   call set_pixel                      /* Call set_pixel function */
 
 .Lstop_draw_pixel:
+  popq %r15
   popq %r14                           /* Restore registers */
   popq %r13
   popq %r12
