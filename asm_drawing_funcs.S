@@ -26,7 +26,15 @@
    they can be called from the unit test code.
  ***********************************************************************/
 
-.globl set_pixel
+/*
+ * Set a specific pixel in the image to a given color.
+ *
+ * Parameters:
+ *   %rdi - pointer to struct Image
+ *   %rsi - index of the pixel within the image's data array
+ *   %edx - uint32_t color value
+ */
+    .globl set_pixel
 set_pixel:
 
   pushq %rbp                /* Save base pointer, set it to stack pointer */
@@ -302,8 +310,7 @@ square:
 
     .globl square_dist
 square_dist:
-    pushq %rbp             /* save */
-    movq %rsp, %rbp        /* set base */
+    pushq %rbx             /* save */
 
     /* Calculate x1 - x2 */
     movq %rdi, %rax        /* bring x1 into rax */
@@ -321,7 +328,7 @@ square_dist:
 
     addq %rbx, %rax        /* add square(x1 - x2) to square(y1 - y2) */
 
-    popq %rbp              /* restore base */
+    popq %rbx              /* restore base */
     ret                    /* Return */
 
 
@@ -485,7 +492,7 @@ draw_rect:
 draw_circle:
     pushq %rbp                        /* Save %rbp */
     movq %rsp, %rbp                   /* Set up %rbp */
-    subq $ 24, %rsp                    /* Allocate local vars */
+    subq $24, %rsp                    /* Allocate local vars */
     pushq %r12                        /* Save %r12 */
     pushq %r13                        /* Save %r13 */
     pushq %r14                        /* Save %r14 */
@@ -536,7 +543,7 @@ draw_circle:
 
 .pixel_outside:
     movl -16(%rbp), %eax              /* Load current x */
-    incl %eax                         /* Increment x */
+    addl $1, %eax                         /* Increment x */
     movl %eax, -16(%rbp)              /* Store new x */
     jmp .x_loop                       /* Next x */
 
@@ -550,7 +557,7 @@ draw_circle:
 
 .end_x_loop:
     movl -8(%rbp), %eax               /* Load current y */
-    incl %eax                         /* Increment y */
+    addl $1, %eax                         /* Increment y */
     movl %eax, -8(%rbp)               /* Store new y */
     jmp .y_loop                       /* Next y */
 
