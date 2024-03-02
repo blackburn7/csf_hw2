@@ -420,7 +420,7 @@ draw_rect:
     movl RECT_HEIGHT_OFFSET(%r12), %ebx /* load rect->height into ebx */
     addl %r14d, %ebx      /* calculate y_end, store in ebx */
 
-.HeightLoop:
+.LHeightRectLoop:
     cmp %ebx, %r14d       /* compare y with y_end */
     jge .EndDrawRectangle /* exit loop if y >= y_end */
     movl RECT_X_OFFSET(%r12), %r10d /* load rect->x into r10d */
@@ -432,7 +432,7 @@ draw_rect:
     /* Reset x for width loop */
     movl RECT_X_OFFSET(%r12), %r11d /* reset current x to rect->x */
 
-.WidthLoop:
+.LWidthRectLoop:
     movl -8(%rbp), %r11d  /* load current x from stack */
     cmp -12(%rbp), %r11d  /* compare x with x_end */
     jge .WidthLoopEnd     /* exit loop if x >= x_end */
@@ -459,11 +459,11 @@ draw_rect:
 
 .PixelSkip:
     addl $1, -8(%rbp)     /* increment current x on stack */
-    jmp .WidthLoop        /* continue width loop */
+    jmp .LWidthRectLoop        /* continue width loop */
 
 .WidthLoopEnd:
     addl $1, %r14d        /* increment current y */
-    jmp .HeightLoop       /* continue height loop */
+    jmp .LHeightRectLoop       /* continue height loop */
 
 .EndDrawRectangle:
     /* Restore stack and registers */

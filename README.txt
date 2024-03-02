@@ -18,3 +18,12 @@ Atticus Colwell:
 
 Matthew Blackburn:
 - implemented set_pixel, blend_components, blend colors
+
+MS3:
+
+Atticus Colwell
+- implemented draw rect and draw circle
+
+Matthew Blackburn
+- implemented square and square dist 
+- worked on tile and sprite
