@@ -489,7 +489,6 @@ draw_rect:
  *   %ecx     - radius of circle
  *   %r8d     - uint32_t color value
  */
-	.globl draw_circle
 .globl draw_circle
 draw_circle:
     pushq %rbp                        /* Save %rbp */
