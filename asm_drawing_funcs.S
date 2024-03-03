@@ -408,7 +408,7 @@ draw_rect:
     subq $16, %rsp        /* allocate stack space for color and alignment */
 
     /* Store function arguments */
-    movl %edx, %ebp       /* store color in ebp */
+    movl %edx, -8(%rbp)       /* store color on stack */
     movq %rsi, %r12       /* store rect pointer in r12 */
     movq %rdi, %r13       /* store image pointer in r13 */
 
@@ -450,7 +450,7 @@ draw_rect:
     /* Set pixel with color from stack */
     movq %r13, %rdi       /* set image pointer from r13 for set_pixel */
     movq %rax, %rsi       /* set pixel index for set_pixel */
-    movl %ebp, %edx   /* set color from stack for set_pixel */
+    movl -8(%rbp), %edx   /* set color from stack for set_pixel */
     call set_pixel        /* call set_pixel function */
 
 .PixelSkip:
