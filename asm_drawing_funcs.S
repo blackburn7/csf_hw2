@@ -418,7 +418,7 @@ draw_rect:
     addl %ebx, %r14d      /* calculate y_end, store in r14d */
 
     movl RECT_X_OFFSET(%r13), %r10d /* load rect->x into r10d */
-    addl RECT_width_OFFSET(%r13), %r10d /* calculate rect->x + rect->width */
+    addl RECT_WIDTH_OFFSET(%r13), %r10d /* calculate rect->x + rect->width */
     movl %r10d, %r15d                   /* move x_end to r15d */
 
 
@@ -426,10 +426,11 @@ draw_rect:
     cmp %r14d, %ebx       /* compare y with y_end */
     jge .EndDrawRectangle /* exit loop if y >= y_end */
 
-    movl RECT_X_OFFSET(%r12), -4(%rbp)  /* reset x to rect->x */
+    movl RECT_X_OFFSET(%r12), %r10d /* move rect->x to r10 */
+    movl %r10d, -4(%rbp)  /* reset x to rect->x */
 
 .LWidthRectLoop:
-    cmp r15d, -4(%rbp)  /* compare x with x_end */
+    cmp %r15d, -4(%rbp)  /* compare x with x_end */
     jge .WidthLoopEnd     /* exit loop if x >= x_end */
     
     /* In bounds check registers */
@@ -437,7 +438,7 @@ draw_rect:
     movl -4(%rbp), %esi      /* set x for in_bounds */
     movl %ebx, %edx      /* set y for in_bounds */
     call in_bounds        /* call in_bounds function */
-    cmpl %eax, $0         /* test in_bounds result */
+    test %eax, %eax         /* test in_bounds result */
     jz .PixelSkip         /* skip if out of bounds */
 
     /* Compute index with registers */
@@ -449,7 +450,7 @@ draw_rect:
     /* Set pixel with color from stack */
     movq %r13, %rdi       /* set image pointer from r13 for set_pixel */
     movq %rax, %rsi       /* set pixel index for set_pixel */
-    movl ebp, %edx   /* set color from stack for set_pixel */
+    movl %ebp, %edx   /* set color from stack for set_pixel */
     call set_pixel        /* call set_pixel function */
 
 .PixelSkip:
