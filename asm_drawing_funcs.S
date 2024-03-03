@@ -417,17 +417,17 @@ draw_rect:
     movl RECT_HEIGHT_OFFSET(%r12), %r14d /* load rect->height into r14d */
     addl %ebx, %r14d      /* calculate y_end, store in r14d */
 
-    movl RECT_X_OFFSET(%r12), %r10d /* load rect->x into r10d */
-    addl RECT_WIDTH_OFFSET(%r12), %r10d /* calculate rect->x + rect->width */
-    movl %r10d, %r15d                   /* move x_end to r15d */
+    movl RECT_X_OFFSET(%r12), %r9d /* load rect->x into r9d */
+    addl RECT_WIDTH_OFFSET(%r12), %r9d /* calculate rect->x + rect->width */
+    movl %r9d, %r15d                   /* move x_end to r15d */
 
 
 .LHeightRectLoop:
     cmp %r14d, %ebx       /* compare y with y_end */
     jge .EndDrawRectangle /* exit loop if y >= y_end */
 
-    movl RECT_X_OFFSET(%r12), %r10d /* move rect->x to r10 */
-    movl %r10d, -4(%rbp)  /* reset x to rect->x */
+    movl RECT_X_OFFSET(%r12), %r9d /* move rect->x to r9 */
+    movl %r9d, -4(%rbp)  /* reset x to rect->x */
 
 .LWidthRectLoop:
     cmp %r15d, -4(%rbp)  /* compare x with x_end */
