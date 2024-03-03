@@ -417,8 +417,8 @@ draw_rect:
     movl RECT_HEIGHT_OFFSET(%r12), %r14d /* load rect->height into r14d */
     addl %ebx, %r14d      /* calculate y_end, store in r14d */
 
-    movl RECT_X_OFFSET(%r13), %r10d /* load rect->x into r10d */
-    addl RECT_WIDTH_OFFSET(%r13), %r10d /* calculate rect->x + rect->width */
+    movl RECT_X_OFFSET(%r12), %r10d /* load rect->x into r10d */
+    addl RECT_WIDTH_OFFSET(%r12), %r10d /* calculate rect->x + rect->width */
     movl %r10d, %r15d                   /* move x_end to r15d */
 
 
