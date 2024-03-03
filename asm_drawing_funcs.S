@@ -405,7 +405,7 @@ draw_rect:
     pushq %rbx            /* save previous rbx */
     pushq %rbp            /* save previous rbp */
     movq %rsp, %rbp       /* set base pointer */
-    subq $16, %rsp        /* allocate stack space for color and alignment */
+    subq $24, %rsp        /* allocate stack space for color and alignment */
 
     /* Store function arguments */
     movl %edx, -8(%rbp)       /* store color on stack */
@@ -463,7 +463,7 @@ draw_rect:
 
 .EndDrawRectangle:
     /* Restore stack and registers */
-    addq $16, %rsp        /* deallocate stack space */
+    addq $24, %rsp        /* deallocate stack space */
     popq %rbp             /* restore previous rbp */
     popq %rbx             /* restore previous rbx */
     popq %r15             /* restore previous r15 */
